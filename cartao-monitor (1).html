@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1565C0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Monitor VW">
+<title>Monitor VW</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#F4F6F9;color:#1A202C;font-family:Arial,Helvetica,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+.hdr{background:#1565C0;padding:12px 14px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(21,101,192,.4)}
+.hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.badge{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.badge svg{width:28px;height:28px}
+.hdr-sub{font-size:9px;letter-spacing:2px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase}
+.hdr-main{font-size:20px;font-weight:900;color:#fff;line-height:1.1}
+.hdr-tag{font-size:11px;font-weight:700;color:#FFD54F}
+
+.kwrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.kwg{display:flex;align-items:center;gap:5px}
+.kwlbl{font-size:10px;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:1px}
+.kwin{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.45);border-radius:7px;padding:6px 9px;color:#fff;font-size:14px;font-weight:700;outline:none;-webkit-appearance:none}
+.kwin::placeholder{color:rgba(255,255,255,.4)}
+.kwin:focus{background:rgba(255,255,255,.28);border-color:#fff}
+.kwin.sm{width:64px}.kwin.md{width:118px}
+
+.tabs{display:flex;gap:2px}
+.tbtn{flex:1;padding:9px 4px;border:none;cursor:pointer;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:rgba(255,255,255,.12);color:rgba(255,255,255,.65);border-radius:7px 7px 0 0;transition:all .18s;border-bottom:3px solid transparent}
+.tbtn.on{background:#fff;color:#1565C0;border-bottom:3px solid #1565C0}
+
+/* ── CONTEÚDO ── */
+.cnt{padding:14px 12px 108px}
+
+/* DIAS */
+.dias{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
+.dias::-webkit-scrollbar{display:none}
+.dbtn{flex-shrink:0;padding:7px 14px;font-size:13px;font-weight:700;border-radius:20px;cursor:pointer;transition:all .18s;border:1.5px solid #CDD5E0;background:#fff;color:#4A5568;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.dbtn.on{background:#1565C0;border-color:#1565C0;color:#fff;box-shadow:0 2px 8px rgba(21,101,192,.3)}
+
+/* TOTAIS */
+.tots{display:flex;gap:8px;margin-bottom:14px}
+.tc{flex:1;border-radius:10px;padding:12px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.tc.ok{background:#E8F5E9;border:1.5px solid #A5D6A7}
+.tc.nk{background:#FFEBEE;border:1.5px solid #EF9A9A}
+.tc.ix{background:#fff;border:1.5px solid #CDD5E0}
+.tlbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.tc.ok .tlbl{color:#1B5E20}.tc.nk .tlbl{color:#B71C1C}.tc.ix .tlbl{color:#718096}
+.tval{font-size:32px;font-weight:900;line-height:1}
+.tc.ok .tval{color:#1B5E20}.tc.nk .tval{color:#B71C1C}.tc.ix .tval{color:#1565C0}
+
+/* ── CARD DE HORA ── */
+.twrap{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.10);border:1px solid #CDD5E0}
+
+.card-hdr{background:#1565C0;display:grid;grid-template-columns:72px 1fr;padding:8px 12px;gap:8px}
+.card-hdr span{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#fff;text-transform:uppercase}
+
+/* cada linha de hora */
+.hrow{border-bottom:1px solid #EAECF0;padding:10px 12px}
+.hrow:last-child{border-bottom:none}
+.hrow.nok-row{background:#FFF5F5}
+
+/* linha topo: label hora + chassis */
+.ht{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.hlbl{font-size:12px;font-weight:700;color:#718096}
+.hlbl.r{color:#B71C1C}
+.cinput{width:100%;background:#F4F6F9;border:1.5px solid #CDD5E0;border-radius:7px;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:500;color:#4A5568;outline:none;-webkit-appearance:none}
+.cinput:focus{border-color:#1976D2;background:#fff}
+
+/* linha baixo: botões OK/NOK + item */
+.hb{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:start}
+
+/* botões OK / NOK */
+.oknoк{display:flex;gap:6px}
+.okbtn{flex:1;padding:10px 4px;border:none;border-radius:8px;cursor:pointer;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:900;letter-spacing:.5px;transition:all .15s;border:2px solid transparent}
+.okbtn:active{transform:scale(.92)}
+.okbtn.ok-off{background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7}
+.okbtn.ok-on{background:#1B5E20;color:#fff;border-color:#1B5E20;box-shadow:0 2px 8px rgba(27,94,32,.35)}
+.okbtn.nk-off{background:#FFEBEE;color:#B71C1C;border-color:#EF9A9A}
+.okbtn.nk-on{background:#B71C1C;color:#fff;border-color:#B71C1C;box-shadow:0 2px 8px rgba(183,28,28,.35)}
+
+/* select item */
+.isel{width:100%;background:#F4F6F9;border:1.5px solid #CDD5E0;border-radius:7px;padding:8px 28px 8px 10px;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:500;color:#4A5568;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23718096' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.isel:focus{border-color:#1976D2;background-color:#fff}
+.isel.has{border-color:#90CAF9;background-color:#E3F2FD;color:#1565C0;font-weight:700}
+.ihint{font-size:10px;color:#718096;margin-top:4px;font-style:italic}
+
+/* ── AUDITORIA ── */
+.asec{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.10);border:1px solid #CDD5E0;margin-bottom:14px}
+.ahdr{padding:11px 14px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.ahdr.zp{background:#1565C0;color:#fff}
+.ahdr.dk{background:#E65100;color:#fff}
+.ahdr small{font-size:9px;letter-spacing:1px;display:block;opacity:.85;font-weight:400;margin-top:2px}
+.ahint{font-size:10px;color:#1565C0;padding:8px 12px;background:#E3F2FD;font-style:italic}
+.arow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #EAECF0}
+.arow:last-child{border-bottom:none}
+.anum{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.anum.zp{background:#E3F2FD;color:#1565C0}
+.anum.dk{background:#FBE9E7;color:#E65100}
+.ainput{flex:1;background:#F4F6F9;border:1.5px solid #CDD5E0;border-radius:7px;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:500;color:#4A5568;outline:none;-webkit-appearance:none}
+.ainput:focus{border-color:#1976D2;background:#fff}
+.ainput.fil{border-color:#90CAF9}
+
+/* ── ANOTAÇÕES ── */
+.anwrap{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.10);border:1px solid #CDD5E0}
+.anhdr{background:#F57F17;color:#fff;padding:11px 14px;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.antxt{width:100%;background:transparent;border:none;padding:14px;color:#4A5568;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.8;resize:none;outline:none;min-height:260px}
+.ancnt{padding:6px 14px 10px;text-align:right;font-size:10px;color:#718096;font-weight:500}
+
+/* ── BOTÕES FIXOS ── */
+.brow{position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;padding:10px 12px 22px;background:#fff;border-top:1px solid #CDD5E0;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:99}
+.bsv{flex:2;padding:13px;border:none;border-radius:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:#1565C0;color:#fff;box-shadow:0 3px 12px rgba(21,101,192,.3);transition:all .2s;text-transform:uppercase;letter-spacing:.5px}
+.bsv.ok2{background:#2E7D32}
+.bpdf{flex:1.4;padding:13px;border:none;border-radius:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;cursor:pointer;background:#E65100;color:#fff;box-shadow:0 3px 12px rgba(230,81,0,.25);transition:all .2s;text-transform:uppercase;letter-spacing:.5px}
+.bclr{flex:.7;padding:13px;border-radius:10px;cursor:pointer;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;background:#FFEBEE;border:1.5px solid #EF9A9A;color:#B71C1C}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:-60px;left:50%;transform:translateX(-50%);color:#fff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;padding:11px 26px;border-radius:30px;z-index:200;transition:top .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.on{top:18px}
+
+.foot{text-align:center;font-size:10px;color:#718096;margin-top:16px;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="badge">
+      <svg viewBox="0 0 100 100" fill="#1565C0">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#1565C0" stroke-width="4"/>
+        <path d="M50,18 L34,64 L50,56 L66,64 Z"/>
+        <path d="M26,28 L37,28 L50,56 L63,28 L74,28 L50,82 Z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-sub">Volkswagen do Brasil · PU Taubaté</div>
+      <div class="hdr-main">CARTÃO DO MONITOR</div>
+      <div class="hdr-tag">Zero Falha B — Fahrwerk</div>
+    </div>
+  </div>
+  <div class="kwrow">
+    <div class="kwg"><span class="kwlbl">KW</span><input class="kwin sm" id="kw" placeholder="--" maxlength="4"></div>
+    <div class="kwg"><span class="kwlbl">CÉLULA</span><input class="kwin md" id="celula" placeholder="..."></div>
+    <div class="kwg"><span class="kwlbl">EQUIPE</span><input class="kwin sm" id="equipe" placeholder="--" maxlength="3"></div>
+  </div>
+  <div class="tabs">
+    <button class="tbtn on" onclick="aba('monitor')" id="tab-monitor">📋 Monitor</button>
+    <button class="tbtn" onclick="aba('audit')" id="tab-audit">🔍 Auditoria</button>
+    <button class="tbtn" onclick="aba('anot')" id="tab-anot">📝 Anotações</button>
+  </div>
+</div>
+
+<div class="cnt">
+
+  <!-- MONITOR -->
+  <div id="aba-monitor">
+    <div class="dias" id="dias"></div>
+    <div class="tots">
+      <div class="tc ok"><div class="tlbl">Total OK</div><div class="tval" id="tok">0</div></div>
+      <div class="tc nk"><div class="tlbl">Total NOK</div><div class="tval" id="tnk">0</div></div>
+      <div class="tc ix"><div class="tlbl">Índice OK</div><div class="tval" id="tidx">—</div></div>
+    </div>
+    <div class="twrap">
+      <div class="card-hdr">
+        <span>Hora / Chassis</span>
+        <span>OK · NOK · Item Falha</span>
+      </div>
+      <div id="tbody"></div>
+    </div>
+    <div class="foot">Dados salvos no dispositivo · sem internet necessária</div>
+  </div>
+
+  <!-- AUDITORIA -->
+  <div id="aba-audit" style="display:none">
+    <div class="asec">
+      <div class="ahdr zp">Audit ZP8 — Itens de Controle
+        <small>Estes itens aparecem como opções de falha no Monitor</small>
+      </div>
+      <div class="ahint">💡 Preencha os itens abaixo. Eles aparecerão no campo "Item Falha" da aba Monitor.</div>
+      <div id="azp8"></div>
+    </div>
+    <div class="asec">
+      <div class="ahdr dk">DKA — Itens de Controle</div>
+      <div id="adka"></div>
+    </div>
+  </div>
+
+  <!-- ANOTAÇÕES -->
+  <div id="aba-anot" style="display:none">
+    <div class="anwrap">
+      <div class="anhdr">📝 Anotações do Monitor</div>
+      <textarea class="antxt" id="anot" placeholder="Registre ocorrências, retrabalhos, falhas, comunicados..." oninput="cntAnot()"></textarea>
+      <div class="ancnt" id="ancnt">0 caracteres</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="brow">
+  <button class="bsv" id="bsv" onclick="salvar()">💾 SALVAR</button>
+  <button class="bpdf" onclick="gerarPDF()">📄 PDF</button>
+  <button class="bclr" onclick="limpar()">🗑</button>
+</div>
+
+<script>
+const DIAS  = ["SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"];
+const HORAS = ["1ª HORA","2ª HORA","3ª HORA","4ª HORA","5ª HORA","6ª HORA","7ª HORA","8ª HORA"];
+let DIA = "SEGUNDA";
+
+/* estado:
+   status = "" | "ok" | "nok"
+*/
+let S = {
+  kw:"", celula:"", equipe:"",
+  reg:{},
+  audit:{zp8:Array(8).fill(""), dka:Array(8).fill("")},
+  anot:""
+};
+
+function initReg(){
+  DIAS.forEach(d=>{
+    if(!S.reg[d]) S.reg[d]={};
+    HORAS.forEach(h=>{
+      if(!S.reg[d][h]) S.reg[d][h]={ch:"", status:"", item:""};
+    });
+  });
+}
+initReg();
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ── CARREGAR ── */
+function load(){
+  try{const sv=localStorage.getItem("vwm5");if(sv){try{S=JSON.parse(sv);}catch(e){}} }catch(e){}
+  initReg();
+  $("kw").value=S.kw||"";
+  $("celula").value=S.celula||"";
+  $("equipe").value=S.equipe||"";
+  $("anot").value=S.anot||"";
+  cntAnot();
+}
+
+/* ── SALVAR ── */
+function salvar(){
+  S.kw=$("kw").value; S.celula=$("celula").value;
+  S.equipe=$("equipe").value; S.anot=$("anot").value;
+  try{localStorage.setItem("vwm5",JSON.stringify(S));}catch(e){}
+  const b=$("bsv"); b.textContent="✓ SALVO!"; b.classList.add("ok2");
+  toast("✓ Dados salvos!","#2E7D32");
+  setTimeout(()=>{ b.textContent="💾 SALVAR"; b.classList.remove("ok2"); },2000);
+}
+
+/* ── LIMPAR ── */
+function limpar(){
+  if(!confirm("Limpar TODOS os dados desta semana?"))return;
+  S={kw:"",celula:"",equipe:"",reg:{},audit:{zp8:Array(8).fill(""),dka:Array(8).fill("")},anot:""};
+  initReg();
+  (function(){try{localStorage.removeItem("vwm5");}catch(e){}})();
+  ["kw","celula","equipe","anot"].forEach(id=>$(id).value="");
+  cntAnot(); rDias(); rTabela(); rAudit(); rTotais();
+}
+
+/* ── TOAST ── */
+function toast(msg,cor){
+  const t=$("toast"); t.textContent=msg; t.style.background=cor||"#2E7D32";
+  t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),2400);
+}
+
+/* ── ABAS ── */
+function aba(a){
+  ["monitor","audit","anot"].forEach(x=>{
+    $("aba-"+x).style.display = x===a ? "block" : "none";
+    $("tab-"+x).classList.toggle("on", x===a);
+  });
+  if(a==="monitor") rTabela();
+}
+
+/* ── DIAS ── */
+function rDias(){
+  const el=$("dias"); el.innerHTML="";
+  DIAS.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="dbtn"+(d===DIA?" on":"");
+    b.textContent=d;
+    b.onclick=()=>{ DIA=d; rDias(); rTabela(); rTotais(); };
+    el.appendChild(b);
+  });
+}
+
+/* ── ZP8 opções ── */
+function zp8Opts(){ return S.audit.zp8.map(v=>v.trim()).filter(v=>v); }
+
+/* ── TABELA ── */
+function rTabela(){
+  const body=$("tbody"); body.innerHTML="";
+  const opts=zp8Opts();
+
+  HORAS.forEach(hora=>{
+    const r=S.reg[DIA][hora];
+    const isOk  = r.status==="ok";
+    const isNok = r.status==="nok";
+
+    /* opções do select */
+    let optH=`<option value="">— sem falha —</option>`;
+    opts.forEach(o=>{
+      optH+=`<option value="${esc(o)}"${r.item===o?" selected":""}>${esc(o)}</option>`;
+    });
+    if(r.item && !opts.includes(r.item)){
+      optH+=`<option value="${esc(r.item)}" selected>${esc(r.item)}</option>`;
+    }
+    optH+=`<option value="__outro__">✏️ Outro...</option>`;
+
+    const row=document.createElement("div");
+    row.className="hrow"+(isNok?" nok-row":"");
+    row.innerHTML=`
+      <div class="ht">
+        <div class="hlbl${isNok?" r":""}">${hora}</div>
+        <input class="cinput" data-d="${DIA}" data-h="${hora}"
+          value="${esc(r.ch)}" placeholder="Nº chassis">
+      </div>
+      <div class="hb">
+        <div class="oknoк">
+          <button class="okbtn ${isOk?"ok-on":"ok-off"}"
+            data-d="${DIA}" data-h="${hora}" data-s="ok">✔ OK</button>
+          <button class="okbtn ${isNok?"nk-on":"nk-off"}"
+            data-d="${DIA}" data-h="${hora}" data-s="nok">✘ NOK</button>
+        </div>
+        <div>
+          <select class="isel${r.item?" has":""}" data-d="${DIA}" data-h="${hora}">
+            ${optH}
+          </select>
+          ${opts.length===0?'<div class="ihint">Cadastre itens na aba Auditoria ZP8</div>':""}
+        </div>
+      </div>`;
+    body.appendChild(row);
+  });
+
+  /* evento chassis */
+  body.querySelectorAll(".cinput").forEach(el=>{
+    el.addEventListener("input",e=>{
+      const{d,h}=e.target.dataset;
+      S.reg[d][h].ch=e.target.value;
+    });
+  });
+
+  /* evento botões OK / NOK */
+  body.querySelectorAll(".okbtn").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      const{d,h,s}=e.currentTarget.dataset;
+      const r=S.reg[d][h];
+      /* toggle: clicou no já ativo → desativa; senão ativa */
+      r.status = (r.status===s) ? "" : s;
+      rTabela(); rTotais();
+    });
+  });
+
+  /* evento select item */
+  body.querySelectorAll(".isel").forEach(sel=>{
+    sel.addEventListener("change",e=>{
+      const{d,h}=e.target.dataset;
+      if(e.target.value==="__outro__"){
+        const c=prompt("Digite a descrição do item:");
+        if(c&&c.trim()){ S.reg[d][h].item=c.trim(); rTabela(); }
+        else e.target.value=S.reg[d][h].item||"";
+        return;
+      }
+      S.reg[d][h].item=e.target.value;
+      e.target.classList.toggle("has",!!e.target.value);
+    });
+  });
+}
+
+/* ── TOTAIS ── */
+function rTotais(){
+  let ok=0,nk=0;
+  HORAS.forEach(h=>{
+    const s=S.reg[DIA][h].status;
+    if(s==="ok") ok++;
+    else if(s==="nok") nk++;
+  });
+  $("tok").textContent=ok;
+  $("tnk").textContent=nk;
+  const t=ok+nk;
+  $("tidx").textContent=t>0?Math.round(ok/t*100)+"%":"—";
+}
+
+/* ── AUDITORIA ── */
+function rAudit(){
+  ["zp8","dka"].forEach(tp=>{
+    const el=$(tp==="zp8"?"azp8":"adka"); el.innerHTML="";
+    S.audit[tp].forEach((v,i)=>{
+      const row=document.createElement("div"); row.className="arow";
+      row.innerHTML=`
+        <div class="anum ${tp==="zp8"?"zp":"dk"}">${i+1}</div>
+        <input class="ainput${v?" fil":""}" data-t="${tp}" data-i="${i}"
+          value="${esc(v)}" placeholder="Item ${i+1}...">`;
+      el.appendChild(row);
+    });
+  });
+  document.querySelectorAll(".ainput").forEach(el=>{
+    el.addEventListener("input",e=>{
+      const{t,i}=e.target.dataset;
+      S.audit[t][parseInt(i)]=e.target.value;
+      e.target.classList.toggle("fil",!!e.target.value);
+    });
+  });
+}
+
+/* ── ANOTAÇÕES ── */
+function cntAnot(){
+  const v=$("anot").value;
+  $("ancnt").textContent=v.length+" caracteres";
+  S.anot=v;
+}
+
+/* ══════════════════════════════════════════
+   GERAR PDF — impressão nativa (100% offline)
+══════════════════════════════════════════ */
+function gerarPDF(){
+  salvar();
+  const kw=$("kw").value||"--";
+  const cel=$("celula").value||"--";
+  const eq=$("equipe").value||"--";
+  const data=new Date().toLocaleDateString("pt-BR");
+  const hora=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+
+  let h=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Monitor VW KW${kw}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;color:#1A202C;background:#fff}
+    .pg{max-width:210mm;margin:0 auto;padding:8mm}
+    .cabec{background:#1565C0;color:#fff;padding:10px 14px;border-radius:6px;margin-bottom:10px}
+    .cabec h1{font-size:15pt;font-weight:900}
+    .cabec p{font-size:8pt;opacity:.85;margin-top:2px}
+    .cabec .inf{font-size:9pt;font-weight:700;margin-top:6px;background:rgba(255,255,255,.15);padding:5px 8px;border-radius:4px;display:inline-block}
+    .dia-hdr{background:#1565C0;color:#fff;padding:5px 10px;font-size:9pt;font-weight:700;margin-top:10px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between}
+    table{width:100%;border-collapse:collapse;font-size:8.5pt}
+    th{background:#BBDEFB;color:#1565C0;padding:5px 6px;text-align:left;font-weight:700;font-size:8pt;letter-spacing:.5px;text-transform:uppercase}
+    td{padding:5px 6px;border-bottom:1px solid #EAECF0;vertical-align:middle}
+    tr:nth-child(even) td{background:#F4F6F9}
+    tr.nok td{background:#FFF5F5}
+    .vok{color:#1B5E20;font-weight:700}.vnk{color:#B71C1C;font-weight:700}
+    .sec-hdr{padding:6px 10px;color:#fff;font-size:9pt;font-weight:700;margin-top:12px;border-radius:4px 4px 0 0;letter-spacing:1px;text-transform:uppercase}
+    .sec-hdr.zp{background:#1565C0}.sec-hdr.dk{background:#E65100}.sec-hdr.an{background:#F57F17}
+    .sec-body{border:1px solid #CDD5E0;border-top:none;border-radius:0 0 4px 4px;overflow:hidden}
+    .si{display:flex;gap:8px;padding:5px 10px;border-bottom:1px solid #EAECF0;font-size:8.5pt;align-items:center}
+    .si:last-child{border-bottom:none}
+    .si:nth-child(even){background:#F4F6F9}
+    .sn{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;flex-shrink:0}
+    .sn.zp{background:#E3F2FD;color:#1565C0}.sn.dk{background:#FBE9E7;color:#E65100}
+    .antxt{padding:10px;font-size:9pt;line-height:1.7;color:#4A5568;white-space:pre-wrap;border:1px solid #CDD5E0;border-top:none;border-radius:0 0 4px 4px}
+    .foot{margin-top:14px;text-align:center;font-size:7.5pt;color:#718096;border-top:1px solid #EAECF0;padding-top:6px}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body><div class="pg">`;
+
+  h+=`<div class="cabec"><h1>CARTÃO DO MONITOR — ZERO FALHA B</h1>
+    <p>Volkswagen do Brasil · PU Taubaté · Fahrwerk</p>
+    <div class="inf">KW: ${kw} &nbsp;|&nbsp; CÉLULA: ${cel} &nbsp;|&nbsp; EQUIPE: ${eq} &nbsp;|&nbsp; ${data} ${hora}</div>
+  </div>`;
+
+  let temDados=false;
+  DIAS.forEach(dia=>{
+    const rows=HORAS.map(h2=>S.reg[dia][h2]);
+    if(!rows.some(r=>r.ch||r.status||r.item))return;
+    temDados=true;
+    let tok=0,tnk=0;
+    rows.forEach(r=>{ if(r.status==="ok")tok++; else if(r.status==="nok")tnk++; });
+    const idx=tok+tnk>0?Math.round(tok/(tok+tnk)*100)+"%":"—";
+    h+=`<div class="dia-hdr"><span>${dia}</span><span>OK: ${tok} &nbsp; NOK: ${tnk} &nbsp; ÍNDICE: ${idx}</span></div>
+    <table><thead><tr><th>Hora</th><th>Chassis</th><th>Status</th><th>Item Falha</th></tr></thead><tbody>`;
+    rows.forEach((r,i)=>{
+      const isNok=r.status==="nok";
+      const statusTxt=r.status==="ok"?"✔ OK":r.status==="nok"?"✘ NOK":"—";
+      h+=`<tr class="${isNok?"nok":""}"><td>${HORAS[i]}</td><td>${r.ch||""}</td>
+        <td class="${r.status==="ok"?"vok":isNok?"vnk":""}">${statusTxt}</td>
+        <td>${r.item||""}</td></tr>`;
+    });
+    h+=`</tbody></table>`;
+  });
+  if(!temDados) h+=`<p style="color:#718096;padding:16px;text-align:center">Nenhum registro lançado nesta semana.</p>`;
+
+  if(S.audit.zp8.some(v=>v)){
+    h+=`<div class="sec-hdr zp">Itens de Controle — Audit ZP8</div><div class="sec-body">`;
+    S.audit.zp8.forEach((v,i)=>{ if(!v)return; h+=`<div class="si"><div class="sn zp">${i+1}</div><div>${esc(v)}</div></div>`; });
+    h+=`</div>`;
+  }
+  if(S.audit.dka.some(v=>v)){
+    h+=`<div class="sec-hdr dk">Itens de Controle — DKA</div><div class="sec-body">`;
+    S.audit.dka.forEach((v,i)=>{ if(!v)return; h+=`<div class="si"><div class="sn dk">${i+1}</div><div>${esc(v)}</div></div>`; });
+    h+=`</div>`;
+  }
+  const anot=S.anot.trim();
+  if(anot){
+    h+=`<div class="sec-hdr an">Anotações do Monitor</div><div class="antxt">${esc(anot)}</div>`;
+  }
+
+  h+=`<div class="foot">Volkswagen do Brasil · PU Taubaté · Zero Falha B · Gerado em ${data} ${hora}</div>`;
+  h+=`</div></body></html>`;
+
+  const w=window.open("","_blank","width=900,height=700");
+  if(!w){ alert("Permita pop-ups para gerar o PDF."); return; }
+  w.document.write(h); w.document.close();
+  w.onload=function(){ w.focus(); w.print(); };
+  toast("📄 Escolha 'Salvar como PDF' na impressão","#E65100");
+}
+
+/* ── PWA ── */
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); });
+
+/* ── EVENTOS KW ── */
+["kw","celula","equipe"].forEach(id=>$(id).addEventListener("change",()=>salvar()));
+
+/* ── INIT ── */
+load(); rDias(); rTabela(); rAudit(); rTotais();
+</script>
+
+<script>
+if("serviceWorker"in navigator){
+  const sw=`const CV="vwm5";
+  self.addEventListener("install",e=>{e.waitUntil(caches.open(CV).then(c=>c.add(self.location.pathname)));self.skipWaiting();});
+  self.addEventListener("activate",e=>{e.waitUntil(self.clients.claim());});
+  self.addEventListener("fetch",e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const blob=new Blob([sw],{type:"application/javascript"});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
