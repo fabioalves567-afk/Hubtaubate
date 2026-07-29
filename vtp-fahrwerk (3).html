@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VTP – Verificação do Trabalho Padronizado</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap');
+
+  :root {
+    --vw-blue:#001E50; --vw-silver:#C8CACF; --vw-light:#F4F5F7;
+    --ok:#00A878; --nok:#E63946; --accent:#009DE0;
+    --border:#D0D3DC; --text:#1A1D2E; --sub:#6B7080;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Barlow',sans-serif;background:var(--vw-light);color:var(--text);min-height:100vh}
+
+  header{background:var(--vw-blue);padding:14px 16px 12px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+  .vw-logo{width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:var(--vw-blue);letter-spacing:-1px;flex-shrink:0}
+  header h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:white;line-height:1.1}
+  header h1 span{display:block;font-weight:300;font-size:12px;color:var(--vw-silver);letter-spacing:.5px}
+  .header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn-icon{width:34px;height:34px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:white;font-size:16px}
+
+  .tabs{display:flex;background:white;border-bottom:2px solid var(--border);position:sticky;top:62px;z-index:90;overflow-x:auto}
+  .tab{flex-shrink:0;flex:1;padding:11px 4px 10px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+  .tab.active{color:var(--vw-blue);border-color:var(--vw-blue)}
+
+  .view{display:none;padding:14px 12px 80px}
+  .view.active{display:block}
+
+  .form-card{background:white;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px}
+  .form-card h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--vw-blue);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+  .field input,.field select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:15px;color:var(--text);background:var(--vw-light);outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none}
+  .field input:focus,.field select:focus{border-color:var(--accent);background:white}
+  .field-row{display:flex;gap:10px}
+  .field-row .field{flex:1}
+
+  /* OPERAÇÃO DROPDOWN */
+  .op-selector{position:relative}
+  .op-search-wrap{position:relative}
+  .op-search-wrap input{padding-right:36px}
+  .op-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;line-height:1;display:none;padding:0}
+  .op-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--accent);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:200;max-height:220px;overflow-y:auto;display:none}
+  .op-dropdown.open{display:block}
+  .op-option{padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border)}
+  .op-option:last-child{border-bottom:none}
+  .op-option:active{background:var(--vw-light)}
+  .op-option-code{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--vw-blue)}
+  .op-option-name{font-size:12px;color:var(--sub);margin-top:1px}
+  .op-selected-tag{display:none;align-items:center;gap:8px;background:#EEF4FF;border:1.5px solid var(--accent);border-radius:8px;padding:9px 12px}
+  .op-selected-tag.show{display:flex}
+  .op-sel-code{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--vw-blue)}
+  .op-sel-name{font-size:13px;color:var(--sub);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .op-change{background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .op-empty-msg{padding:14px;text-align:center;font-size:13px;color:var(--sub)}
+
+  .toggle-group{display:flex;gap:8px}
+  .toggle-btn{flex:1;padding:12px 8px;border:2px solid var(--border);border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;text-align:center;cursor:pointer;transition:all .15s;background:white;color:var(--sub)}
+  .toggle-btn.ok.selected{background:#E8FAF4;border-color:var(--ok);color:var(--ok)}
+  .toggle-btn.nok.selected{background:#FDECEA;border-color:var(--nok);color:var(--nok)}
+  .toggle-btn:active{transform:scale(.97)}
+
+  .btn-submit{width:100%;padding:15px;background:var(--vw-blue);color:white;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;letter-spacing:.5px;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-submit:active{background:#003080}
+
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1D2E;color:white;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;z-index:999}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .list-header h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;color:var(--vw-blue)}
+  .count-badge{background:var(--vw-blue);color:white;font-size:12px;font-weight:600;padding:2px 9px;border-radius:10px}
+  .filter-row{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+  .filter-chip{flex-shrink:0;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:white;color:var(--sub)}
+  .filter-chip.active{background:var(--vw-blue);border-color:var(--vw-blue);color:white}
+
+  .record-card{background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid var(--border);display:flex;align-items:center;gap:12px;animation:slideIn .2s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .record-card.ok{border-color:var(--ok)}
+  .record-card.nok{border-color:var(--nok)}
+  .badge{width:44px;height:44px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:14px}
+  .badge.ok{background:#E8FAF4;color:var(--ok)}
+  .badge.nok{background:#FDECEA;color:var(--nok)}
+  .record-info{flex:1;min-width:0}
+  .record-op-name{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:1px}
+  .record-op{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--vw-blue)}
+  .record-meta{font-size:12px;color:var(--sub);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .record-date{font-size:11px;color:var(--sub);text-align:right;flex-shrink:0;font-weight:500}
+  .btn-del{width:30px;height:30px;background:#FFF0F0;border:none;border-radius:6px;color:var(--nok);font-size:14px;cursor:pointer;flex-shrink:0}
+
+  .empty-state{text-align:center;padding:48px 16px;color:var(--sub)}
+  .empty-state .icon{font-size:48px;margin-bottom:12px}
+  .empty-state p{font-size:14px;line-height:1.5}
+
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .stat-card{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
+  .stat-val{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;line-height:1}
+  .stat-lbl{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+  .stat-card.total .stat-val{color:var(--vw-blue)}
+  .stat-card.ok-card .stat-val{color:var(--ok)}
+  .stat-card.nok-card .stat-val{color:var(--nok)}
+  .stat-card.pct .stat-val{color:var(--accent);font-size:28px}
+  .bar-wrap{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px}
+  .bar-wrap h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--vw-blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px}
+  .bar-row{margin-bottom:10px}
+  .bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;font-weight:500}
+  .bar-track{height:10px;background:var(--vw-light);border-radius:5px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+  .bar-fill.ok{background:var(--ok)}
+  .bar-fill.nok{background:var(--nok)}
+
+  /* OPERAÇÕES */
+  .add-op-row{display:flex;gap:8px;margin-top:4px}
+  .add-op-code{width:110px;flex-shrink:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--text);background:var(--vw-light);outline:none;text-transform:uppercase}
+  .add-op-code:focus{border-color:var(--accent);background:white}
+  .add-op-name{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--text);background:var(--vw-light);outline:none}
+  .add-op-name:focus{border-color:var(--accent);background:white}
+  .btn-add-op{padding:10px 14px;background:var(--vw-blue);color:white;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .btn-add-op:active{background:#003080}
+  .op-count-info{font-size:12px;color:var(--sub);margin-bottom:10px}
+  .op-list-item{background:var(--vw-light);border-radius:8px;padding:11px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .op-list-code{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:var(--vw-blue);min-width:65px}
+  .op-list-name{flex:1;font-size:13px;color:var(--text)}
+  .btn-op-sm{width:28px;height:28px;border:none;border-radius:6px;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .btn-op-edit{background:#EEF4FF;color:var(--accent)}
+  .btn-op-del{background:#FFF0F0;color:var(--nok)}
+
+  .export-card{background:white;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px}
+  .export-card h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--vw-blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+  .btn-export{width:100%;padding:13px;border:2px solid var(--vw-blue);border-radius:10px;background:white;color:var(--vw-blue);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-export:active{background:var(--vw-blue);color:white}
+  .btn-export.danger{border-color:var(--nok);color:var(--nok)}
+  .btn-export.danger:active{background:var(--nok);color:white}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="vw-logo">VW</div>
+  <h1>Trab. Padronizado <span>Fahrwerk · 2º Turno</span></h1>
+  <div class="header-right">
+    <div class="btn-icon" onclick="showToast('💾 Salvo automaticamente')">💾</div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active"  onclick="switchTab('registro',this)">✏️ Registro</div>
+  <div class="tab"         onclick="switchTab('lista',this)">📋 Lista</div>
+  <div class="tab"         onclick="switchTab('dashboard',this)">📊 Painel</div>
+  <div class="tab"         onclick="switchTab('operacoes',this)">⚙️ Operações</div>
+  <div class="tab"         onclick="switchTab('exportar',this)">⬆️ Exportar</div>
+</div>
+
+<!-- REGISTRO -->
+<div class="view active" id="view-registro">
+  <div class="form-card">
+    <h3>Nova Verificação</h3>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="f-data">
+      </div>
+      <div class="field">
+        <label>Turno</label>
+        <select id="f-turno">
+          <option value="1º">1º Turno</option>
+          <option value="2º" selected>2º Turno</option>
+          <option value="3º">3º Turno</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Operação</label>
+      <div class="op-selector" id="op-selector">
+        <div class="op-search-wrap" id="op-search-wrap">
+          <input type="text" id="op-search"
+            placeholder="Digite código ou nome da operação..."
+            autocomplete="off" autocorrect="off" spellcheck="false"
+            oninput="filtrarOps()" onfocus="abrirDropdown()">
+          <button class="op-clear" id="op-clear" onclick="limparBusca()">×</button>
+        </div>
+        <div class="op-dropdown" id="op-dropdown"></div>
+        <div class="op-selected-tag" id="op-selected-tag">
+          <span class="op-sel-code" id="op-sel-code"></span>
+          <span class="op-sel-name" id="op-sel-name"></span>
+          <button class="op-change" onclick="trocarOperacao()">Trocar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tacto</label>
+      <input type="text" id="f-tacto" placeholder="Ex: L46" autocomplete="off" style="text-transform:uppercase">
+    </div>
+
+    <div class="field">
+      <label>Colaborador (matrícula)</label>
+      <input type="text" id="f-colab" placeholder="Ex: 406 6152" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Resultado</label>
+      <div class="toggle-group">
+        <div class="toggle-btn ok"  id="btn-ok"  onclick="selectResult('OK')">✅ OK</div>
+        <div class="toggle-btn nok" id="btn-nok" onclick="selectResult('NOK')">❌ NOK</div>
+      </div>
+    </div>
+
+    <div class="field" id="obs-field" style="display:none">
+      <label>Observação (NOK)</label>
+      <input type="text" id="f-obs" placeholder="Descreva o desvio...">
+    </div>
+  </div>
+
+  <button class="btn-submit" onclick="salvarRegistro()">✔ REGISTRAR VERIFICAÇÃO</button>
+</div>
+
+<!-- LISTA -->
+<div class="view" id="view-lista">
+  <div class="list-header">
+    <h2>Registros</h2>
+    <span class="count-badge" id="count-badge">0</span>
+  </div>
+  <div class="filter-row">
+    <div class="filter-chip active" onclick="filtrar('todos',this)">Todos</div>
+    <div class="filter-chip" onclick="filtrar('OK',this)">✅ OK</div>
+    <div class="filter-chip" onclick="filtrar('NOK',this)">❌ NOK</div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><button class="pfbtn" data-p="todos" onclick="setPeriodo('todos')" style="padding:6px 12px;border-radius:7px;border:1.5px solid #001E50;background:#001E50;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Todos</button><button class="pfbtn" data-p="semana" onclick="setPeriodo('semana')" style="padding:6px 12px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:11px;font-weight:700;cursor:pointer">Esta semana</button><button class="pfbtn" data-p="semana-1" onclick="setPeriodo('semana-1')" style="padding:6px 12px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:11px;font-weight:700;cursor:pointer">Sem. anterior</button><button class="pfbtn" data-p="mes" onclick="setPeriodo('mes')" style="padding:6px 12px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:11px;font-weight:700;cursor:pointer">Este mês</button><button class="pfbtn" data-p="mes-1" onclick="setPeriodo('mes-1')" style="padding:6px 12px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:11px;font-weight:700;cursor:pointer">Mês anterior</button></div><div id="lista-container"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="view" id="view-dashboard">
+  <div class="stats-grid">
+    <div class="stat-card total"><div class="stat-val" id="d-total">0</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card pct">  <div class="stat-val" id="d-pct">—</div>  <div class="stat-lbl">Taxa OK</div></div>
+    <div class="stat-card ok-card"><div class="stat-val" id="d-ok">0</div><div class="stat-lbl">Conformes</div></div>
+    <div class="stat-card nok-card"><div class="stat-val" id="d-nok">0</div><div class="stat-lbl">Não conf.</div></div>
+  </div>
+  <div class="bar-wrap"><h3>Top Operações (NOK)</h3><div id="bar-ops"></div></div>
+  <div class="bar-wrap"><h3>Por Turno</h3><div id="bar-turno"></div></div>
+</div>
+
+<!-- OPERAÇÕES -->
+<div class="view" id="view-operacoes">
+  <div class="form-card">
+    <h3>Cadastrar Operação</h3>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input class="add-op-code" id="new-op-code" placeholder="Código" maxlength="12">
+      <input class="add-op-name" id="new-op-name" placeholder="Nome da operação">
+    </div>
+    <button class="btn-add-op" style="width:100%;padding:11px" onclick="adicionarOperacao()">+ ADICIONAR OPERAÇÃO</button>
+  </div>
+
+  <div class="form-card">
+    <h3>Operações Cadastradas</h3>
+    <p class="op-count-info" id="op-count-info">0 operações</p>
+    <div id="op-list-container"></div>
+    <div class="empty-state" id="op-empty" style="display:none;padding:20px 0">
+      <div class="icon">⚙️</div>
+      <p>Nenhuma operação cadastrada.<br>Adicione acima para usar no Registro.</p>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORTAR -->
+<div class="view" id="view-exportar">
+  <div class="export-card">
+    <h3>Exportar</h3>
+    <button class="btn-export" onclick="exportCSV()">📄 Baixar CSV (Excel)</button>
+    <button class="btn-export" onclick="exportJSON()">💾 Backup Completo JSON</button>
+    <button class="btn-export" onclick="importJSON()">📂 Importar JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+  </div>
+  <div class="export-card">
+    <h3>Relatório Rápido</h3>
+    <button class="btn-export" onclick="copiarRelatorio()">📋 Copiar para WhatsApp</button>
+  </div>
+  <div class="export-card">
+    <h3>Zona de Risco</h3>
+    <button class="btn-export danger" onclick="limparTudo()">🗑 Apagar todos os registros</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE
+let registros = (function(){try{return JSON.parse(localStorage.getItem('vtp_registros')||'[]');}catch(e){return[];}})();
+let operacoes = JSON.parse(localStorage.getItem('vtp_operacoes') || '[]');
+let filtroAtivo = 'todos';
+let periodoAtivo = 'todos';
+let resultadoSelecionado = null;
+let operacaoSelecionada  = null; // {codigo, nome}
+
+// ── INIT
+document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+renderLista();
+renderDashboard();
+renderOperacoes();
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('op-selector').contains(e.target)) fecharDropdown();
+});
+
+// ── TABS
+function switchTab(tab, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  el.classList.add('active');
+  if (tab === 'lista')      renderLista();
+  if (tab === 'dashboard')  renderDashboard();
+  if (tab === 'operacoes')  renderOperacoes();
+}
+
+// ── DROPDOWN OPERAÇÃO
+function filtrarOps() {
+  const q = document.getElementById('op-search').value.trim().toLowerCase();
+  document.getElementById('op-clear').style.display = q ? 'block' : 'none';
+  const dd = document.getElementById('op-dropdown');
+  const lista = q
+    ? operacoes.filter(o => o.codigo.toLowerCase().includes(q) || o.nome.toLowerCase().includes(q))
+    : operacoes;
+
+  if (!lista.length) {
+    dd.innerHTML = `<div class="op-empty-msg">${operacoes.length ? 'Nenhum resultado' : 'Cadastre operações na aba ⚙️ Operações'}</div>`;
+  } else {
+    dd.innerHTML = lista
+      .sort((a,b) => a.codigo.localeCompare(b.codigo))
+      .map(o => `
+        <div class="op-option" onclick="selecionarOp('${esc(o.codigo)}','${esc(o.nome)}')">
+          <div class="op-option-code">${o.codigo}</div>
+          <div class="op-option-name">${o.nome}</div>
+        </div>`).join('');
+  }
+  dd.classList.add('open');
+}
+
+function abrirDropdown() { filtrarOps(); }
+function fecharDropdown() { document.getElementById('op-dropdown').classList.remove('open'); }
+
+function selecionarOp(cod, nome) {
+  operacaoSelecionada = { codigo: cod, nome };
+  document.getElementById('op-search-wrap').style.display = 'none';
+  fecharDropdown();
+  document.getElementById('op-sel-code').textContent = cod;
+  document.getElementById('op-sel-name').textContent = nome;
+  document.getElementById('op-selected-tag').classList.add('show');
+}
+
+function trocarOperacao() {
+  operacaoSelecionada = null;
+  document.getElementById('op-selected-tag').classList.remove('show');
+  const wrap = document.getElementById('op-search-wrap');
+  wrap.style.display = '';
+  const inp = document.getElementById('op-search');
+  inp.value = '';
+  document.getElementById('op-clear').style.display = 'none';
+  inp.focus();
+  filtrarOps();
+}
+
+function limparBusca() {
+  document.getElementById('op-search').value = '';
+  document.getElementById('op-clear').style.display = 'none';
+  filtrarOps();
+  document.getElementById('op-search').focus();
+}
+
+function esc(s) { return s.replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+
+// ── RESULTADO
+function selectResult(val) {
+  resultadoSelecionado = val;
+  document.getElementById('btn-ok').classList.toggle('selected', val === 'OK');
+  document.getElementById('btn-nok').classList.toggle('selected', val === 'NOK');
+  document.getElementById('obs-field').style.display = val === 'NOK' ? 'block' : 'none';
+}
+
+// ── SALVAR REGISTRO
+function salvarRegistro() {
+  const data  = document.getElementById('f-data').value;
+  const turno = document.getElementById('f-turno').value;
+  const tacto = document.getElementById('f-tacto').value.trim().toUpperCase();
+  const colab = document.getElementById('f-colab').value.trim();
+  const obs   = document.getElementById('f-obs').value.trim();
+
+  if (!data || !operacaoSelecionada || !tacto || !colab || !resultadoSelecionado) {
+    showToast('⚠️ Preencha todos os campos'); return;
+  }
+
+  registros.unshift({
+    id: Date.now(),
+    data, turno,
+    operacao: operacaoSelecionada.codigo,
+    opNome:   operacaoSelecionada.nome,
+    tacto, colab,
+    resultado: resultadoSelecionado,
+    obs,
+    timestamp: new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+  });
+  salvarDados();
+
+  // reset
+  document.getElementById('f-tacto').value = '';
+  document.getElementById('f-colab').value = '';
+  document.getElementById('f-obs').value   = '';
+  document.getElementById('obs-field').style.display = 'none';
+  document.getElementById('btn-ok').classList.remove('selected');
+  document.getElementById('btn-nok').classList.remove('selected');
+  resultadoSelecionado = null;
+  trocarOperacao();
+
+  showToast(registros[0].resultado === 'OK' ? '✅ OK registrado!' : '❌ NOK registrado!');
+}
+
+// ── LISTA
+
+function setPeriodo(p){
+  periodoAtivo=p;
+  document.querySelectorAll('.pfbtn').forEach(function(b){
+    var on=b.dataset.p===p;
+    b.style.background=on?'#001E50':'#F0F4F8';
+    b.style.color=on?'#fff':'#1A2636';
+    b.style.borderColor=on?'#001E50':'#C0C8D8';
+  });
+  renderLista();
+}
+function filterPeriodo(r){
+  if(periodoAtivo==='todos') return true;
+  var rd=new Date(r.data+'T00:00:00'), now=new Date(), dow=now.getDay()||7;
+  if(periodoAtivo==='semana'){var mon=new Date(now);mon.setDate(now.getDate()-dow+1);mon.setHours(0,0,0,0);return rd>=mon;}
+  if(periodoAtivo==='semana-1'){var p1=new Date(now);p1.setDate(now.getDate()-dow-6);p1.setHours(0,0,0,0);var p2=new Date(now);p2.setDate(now.getDate()-dow);p2.setHours(23,59,59);return rd>=p1&&rd<=p2;}
+  if(periodoAtivo==='mes'){return rd.getMonth()===now.getMonth()&&rd.getFullYear()===now.getFullYear();}
+  if(periodoAtivo==='mes-1'){var pm=new Date(now.getFullYear(),now.getMonth()-1,1);return rd.getMonth()===pm.getMonth()&&rd.getFullYear()===pm.getFullYear();}
+  return true;
+}
+function renderLista() {
+  const lista = (filtroAtivo === 'todos' ? registros : registros.filter(r => r.resultado === filtroAtivo)).filter(filterPeriodo);
+  document.getElementById('count-badge').textContent = lista.length;
+  const el = document.getElementById('lista-container');
+  if (!lista.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Nenhum registro.<br>Use a aba <strong>Registro</strong> para adicionar.</p></div>`;
+    return;
+  }
+  el.innerHTML = lista.map(r => `
+    <div class="record-card ${r.resultado.toLowerCase()}">
+      <div class="badge ${r.resultado.toLowerCase()}">${r.resultado}</div>
+      <div class="record-info">
+        <div class="record-op-name">${r.opNome || ''}</div>
+        <div class="record-op">${r.operacao} · ${r.tacto}</div>
+        <div class="record-meta">${r.colab}${r.obs ? ' · '+r.obs : ''}</div>
+      </div>
+      <div class="record-date">${r.data.split('-').reverse().join('/')}<br>${r.timestamp}</div>
+      <button class="btn-del" onclick="deletar(${r.id})">🗑</button>
+    </div>`).join('');
+}
+
+function filtrar(tipo, el) {
+  filtroAtivo = tipo;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderLista();
+}
+
+function deletar(id) {
+  if (!confirm('Remover este registro?')) return;
+  registros = registros.filter(r => r.id !== id);
+  salvarDados(); renderLista(); renderDashboard();
+  showToast('🗑 Removido');
+}
+
+// ── DASHBOARD
+function renderDashboard() {
+  const total = registros.length;
+  const ok    = registros.filter(r => r.resultado === 'OK').length;
+  const nok   = registros.filter(r => r.resultado === 'NOK').length;
+  const pct   = total ? Math.round((ok/total)*100) : null;
+
+  document.getElementById('d-total').textContent = total;
+  document.getElementById('d-ok').textContent    = ok;
+  document.getElementById('d-nok').textContent   = nok;
+  document.getElementById('d-pct').textContent   = pct !== null ? pct+'%' : '—';
+
+  const nokMap = {};
+  registros.filter(r => r.resultado === 'NOK').forEach(r => {
+    if (!nokMap[r.operacao]) nokMap[r.operacao] = { count:0, nome: r.opNome||'' };
+    nokMap[r.operacao].count++;
+  });
+  const topOps = Object.entries(nokMap).sort((a,b)=>b[1].count-a[1].count).slice(0,5);
+  const maxOp  = topOps[0]?.[1].count || 1;
+  document.getElementById('bar-ops').innerHTML = topOps.length
+    ? topOps.map(([cod,v])=>`
+        <div class="bar-row">
+          <div class="bar-label"><span><b>${cod}</b>${v.nome?' · '+v.nome:''}</span><span>${v.count} NOK</span></div>
+          <div class="bar-track"><div class="bar-fill nok" style="width:${(v.count/maxOp)*100}%"></div></div>
+        </div>`).join('')
+    : '<p style="font-size:13px;color:var(--sub)">Nenhum NOK registrado 👍</p>';
+
+  const turnos = {};
+  registros.forEach(r => { turnos[r.turno]=(turnos[r.turno]||0)+1; });
+  const te = Object.entries(turnos).sort();
+  const mt = te[0]?.[1]||1;
+  document.getElementById('bar-turno').innerHTML = te.length
+    ? te.map(([t,c])=>`
+        <div class="bar-row">
+          <div class="bar-label"><span>${t} Turno</span><span>${c}</span></div>
+          <div class="bar-track"><div class="bar-fill ok" style="width:${(c/mt)*100}%"></div></div>
+        </div>`).join('')
+    : '<p style="font-size:13px;color:var(--sub)">Sem dados</p>';
+}
+
+// ── CADASTRO DE OPERAÇÕES
+function renderOperacoes() {
+  const el  = document.getElementById('op-list-container');
+  const emp = document.getElementById('op-empty');
+  const inf = document.getElementById('op-count-info');
+  const n   = operacoes.length;
+  inf.textContent = `${n} operaç${n===1?'ão':'ões'} cadastrada${n===1?'':'s'}`;
+  if (!n) { el.innerHTML=''; emp.style.display='block'; return; }
+  emp.style.display = 'none';
+  el.innerHTML = [...operacoes]
+    .sort((a,b)=>a.codigo.localeCompare(b.codigo))
+    .map(o=>`
+      <div class="op-list-item">
+        <div class="op-list-code">${o.codigo}</div>
+        <div class="op-list-name">${o.nome}</div>
+        <button class="btn-op-sm btn-op-edit" onclick="editarOp('${esc(o.codigo)}')">✏️</button>
+        <button class="btn-op-sm btn-op-del"  onclick="deletarOp('${esc(o.codigo)}')">🗑</button>
+      </div>`).join('');
+}
+
+function adicionarOperacao() {
+  const codigo = document.getElementById('new-op-code').value.trim().toUpperCase();
+  const nome   = document.getElementById('new-op-name').value.trim();
+  if (!codigo||!nome){ showToast('⚠️ Preencha código e nome'); return; }
+  if (operacoes.find(o=>o.codigo===codigo)){ showToast('⚠️ Código já existe'); return; }
+  operacoes.push({codigo,nome});
+  salvarDados(); renderOperacoes();
+  document.getElementById('new-op-code').value='';
+  document.getElementById('new-op-name').value='';
+  document.getElementById('new-op-code').focus();
+  showToast(`✅ ${codigo} adicionado`);
+}
+
+function editarOp(cod) {
+  const op = operacoes.find(o=>o.codigo===cod);
+  if (!op) return;
+  const novo = prompt(`Novo nome para "${cod}":`, op.nome);
+  if (novo===null) return;
+  if (!novo.trim()){ showToast('⚠️ Nome vazio'); return; }
+  op.nome = novo.trim();
+  salvarDados(); renderOperacoes();
+  showToast('✅ Atualizado');
+}
+
+function deletarOp(cod) {
+  if (!confirm(`Remover "${cod}"?`)) return;
+  operacoes = operacoes.filter(o=>o.codigo!==cod);
+  salvarDados(); renderOperacoes();
+  showToast('🗑 Operação removida');
+}
+
+// Enter key no cadastro
+document.getElementById('new-op-code').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('new-op-name').focus(); });
+document.getElementById('new-op-name').addEventListener('keydown', e => { if(e.key==='Enter') adicionarOperacao(); });
+
+// ── EXPORT
+function exportCSV() {
+  if (!registros.length){ showToast('Sem dados'); return; }
+  const h = 'Data;Operação;Nome Operação;Tacto;Colaborador;Turno;Resultado;Observação;Hora';
+  const rows = registros.map(r=>`${r.data};${r.operacao};${r.opNome||''};${r.tacto};${r.colab};${r.turno};${r.resultado};${r.obs||''};${r.timestamp}`);
+  download('VTP_Fahrwerk.csv','text/csv;charset=utf-8;','\uFEFF'+[h,...rows].join('\n'));
+  showToast('📄 CSV exportado!');
+}
+
+function exportJSON() {
+  download('VTP_backup.json','application/json',JSON.stringify({registros,operacoes},null,2));
+  showToast('💾 Backup salvo!');
+}
+
+function importJSON(){ document.getElementById('import-file').click(); }
+
+function handleImport(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try {
+      const d=JSON.parse(ev.target.result);
+      if (Array.isArray(d)) { registros=[...d,...registros]; }
+      else {
+        if(d.registros) registros=[...d.registros,...registros];
+        if(d.operacoes) operacoes=[...d.operacoes.filter(no=>!operacoes.find(o=>o.codigo===no.codigo)),...operacoes];
+      }
+      salvarDados(); renderLista(); renderDashboard(); renderOperacoes();
+      showToast('✅ Importação concluída');
+    } catch { showToast('❌ Arquivo inválido'); }
+  };
+  r.readAsText(file); e.target.value='';
+}
+
+function copiarRelatorio() {
+  const t=registros.length, ok=registros.filter(r=>r.resultado==='OK').length, nok=t-ok;
+  const pct=t?Math.round((ok/t)*100):0;
+  const txt=`📋 *VTP – Fahrwerk* | ${new Date().toLocaleDateString('pt-BR')}\n2º Turno\n\n✅ OK: ${ok}\n❌ NOK: ${nok}\n📊 Total: ${t} verificações\n🎯 Conformidade: ${pct}%\n\n_Verificação do Trabalho Padronizado_`;
+  navigator.clipboard.writeText(txt).then(()=>showToast('📋 Copiado!')).catch(()=>showToast('Não foi possível copiar'));
+}
+
+function limparTudo() {
+  if(!confirm('Apagar todos os registros?')) return;
+  registros=[]; salvarDados(); renderLista(); renderDashboard();
+  showToast('🗑 Dados apagados');
+}
+
+// ── UTILS
+function salvarDados() {
+  (function(){try{localStorage.setItem('vtp_registros',JSON.stringify(registros));
+  localStorage.setItem('vtp_operacoes',JSON.stringify(operacoes));
+}
+function download(name,type,content) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name; a.click();
+}
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>

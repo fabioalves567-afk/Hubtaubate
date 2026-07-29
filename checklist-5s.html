@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Checklist 5S – Fahrwerk VW</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --vw-blue: #001e50;
+    --vw-light: #00b0f0;
+    --vw-silver: #c8cacf;
+    --vw-green: #00a550;
+    --vw-red: #d0021b;
+    --vw-yellow: #f5a623;
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1a1e2d;
+    --muted: #6b7280;
+    --border: #dde1e9;
+    --sim: #00a550;
+    --nao: #d0021b;
+    --na: #6b7280;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--vw-blue);
+    color: #fff;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .vw-logo {
+    width: 38px; height: 38px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .vw-logo svg { width: 26px; height: 26px; }
+  .header-title { flex: 1; }
+  .header-title h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
+  .header-title p { font-size: 11px; color: var(--vw-silver); margin-top: 1px; }
+  .score-badge {
+    background: var(--vw-light);
+    color: var(--vw-blue);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 64px;
+  }
+  .score-badge span { display: block; font-size: 9px; font-weight: 500; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    padding: 6px 16px;
+    background: rgba(0,0,0,0.2);
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--vw-silver);
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--vw-light);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    display: flex; gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--vw-blue);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    padding: 8px 14px;
+    font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .nav-tab.active { color: #fff; border-bottom-color: var(--vw-light); }
+  .nav-tab .tab-dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--vw-silver);
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .nav-tab.done .tab-dot { background: var(--vw-green); }
+  .nav-tab.partial .tab-dot { background: var(--vw-yellow); }
+
+  /* ── MAIN ── */
+  main { padding: 12px 14px 100px; max-width: 700px; margin: 0 auto; }
+
+  /* ── META CARD ── */
+  .meta-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .meta-field label {
+    display: block; font-size: 10px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .meta-field input {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 10px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px; color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .meta-field input:focus { border-color: var(--vw-light); }
+  .meta-field.full { grid-column: 1 / -1; }
+
+  /* ── SECTION ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    background: var(--vw-blue);
+    color: #fff;
+    border-radius: 10px 10px 0 0;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-num {
+    background: var(--vw-light);
+    color: var(--vw-blue);
+    font-weight: 700; font-size: 13px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title { font-weight: 600; font-size: 14px; }
+  .section-pts { margin-left: auto; font-size: 11px; color: var(--vw-silver); }
+
+  .questions-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .question-row {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .question-row:last-child { border-bottom: none; }
+
+  .question-text {
+    font-size: 12px; line-height: 1.5; color: var(--text);
+  }
+
+  .answer-row {
+    display: flex; gap: 8px; align-items: center;
+  }
+
+  .ans-btn {
+    flex: 1;
+    padding: 7px 4px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+  .ans-btn.sim:hover, .ans-btn.sim.sel { background: var(--sim); border-color: var(--sim); color: #fff; }
+  .ans-btn.nao:hover, .ans-btn.nao.sel { background: var(--nao); border-color: var(--nao); color: #fff; }
+  .ans-btn.na:hover, .ans-btn.na.sel { background: var(--na); border-color: var(--na); color: #fff; }
+
+  .obs-input {
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 9px;
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    resize: none;
+    outline: none;
+    display: none;
+    transition: border-color 0.2s;
+  }
+  .obs-input:focus { border-color: var(--vw-light); }
+  .obs-input.show { display: block; }
+
+  /* ── NAV BUTTONS ── */
+  .nav-btns {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; gap: 10px;
+    z-index: 99;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .btn-prev, .btn-next, .btn-finish {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-prev { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+  .btn-next { background: var(--vw-blue); color: #fff; }
+  .btn-next:hover { background: #002a6e; }
+  .btn-finish { background: var(--vw-green); color: #fff; display: none; }
+
+  /* ── RESULTADO ── */
+  #result-section {
+    display: none;
+    padding: 14px;
+  }
+  .result-card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .result-header {
+    background: var(--vw-blue);
+    color: #fff;
+    padding: 18px;
+    text-align: center;
+  }
+  .result-score-big {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 56px; font-weight: 700;
+    color: var(--vw-light);
+    line-height: 1;
+  }
+  .result-score-big span { font-size: 22px; color: rgba(255,255,255,0.6); }
+  .result-label { font-size: 12px; color: var(--vw-silver); margin-top: 4px; }
+  .result-grade {
+    font-size: 20px; font-weight: 700;
+    margin-top: 10px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+
+  .breakdown-list { padding: 10px 0; }
+  .breakdown-item {
+    display: flex; align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .breakdown-item:last-child { border-bottom: none; }
+  .breakdown-num {
+    background: var(--vw-blue);
+    color: #fff; font-size: 10px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .breakdown-name { flex: 1; font-size: 12px; font-weight: 500; }
+  .breakdown-bar-wrap { width: 80px; }
+  .breakdown-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .breakdown-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s; }
+  .breakdown-score { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; margin-left: 6px; }
+
+  .result-actions { display: flex; gap: 10px; padding: 14px; }
+  .btn-print, .btn-reset {
+    flex: 1; padding: 12px;
+    border-radius: 10px; border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-print { background: var(--vw-blue); color: #fff; }
+  .btn-reset { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+
+  /* ── PRINT ── */
+  @media print {
+    header, .nav-btns, .result-actions { display: none !important; }
+    body { background: #fff; }
+    .result-card { box-shadow: none; }
+    #checklist-section { display: none !important; }
+    #result-section { display: block !important; }
+    .breakdown-item { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="vw-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" stroke="#001e50" stroke-width="4"/>
+        <path d="M50 15 L35 60 L50 75 L65 60 Z" fill="#001e50"/>
+        <path d="M25 20 L38 60 L50 75 L20 35 Z" fill="#001e50"/>
+        <path d="M75 20 L62 60 L50 75 L80 35 Z" fill="#001e50"/>
+      </svg>
+    </div>
+    <div class="header-title">
+      <h1>Checklist 5S – Konzern</h1>
+      <p>Célula: Fahrwerk | Sistema de Produção</p>
+    </div>
+    <div class="score-badge" id="live-score">
+      0/95
+      <span>pontos</span>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progress-text">0 de 0 respondidas</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="nav-tabs" id="nav-tabs"></div>
+</header>
+
+<main>
+  <div id="checklist-section">
+    <!-- meta fields -->
+    <div class="meta-card">
+      <div class="meta-field">
+        <label>Data</label>
+        <input type="date" id="meta-data">
+      </div>
+      <div class="meta-field">
+        <label>Posto</label>
+        <input type="text" id="meta-posto" placeholder="Ex: Fahrwerk A">
+      </div>
+      <div class="meta-field full">
+        <label>Verificação por</label>
+        <input type="text" id="meta-nome" placeholder="Nome do Monitor">
+      </div>
+    </div>
+
+    <!-- sections injected by JS -->
+    <div id="sections-container"></div>
+  </div>
+
+  <div id="result-section">
+    <div class="result-card">
+      <div class="result-header">
+        <div style="font-size:11px;color:var(--vw-silver);margin-bottom:6px">RESULTADO FINAL</div>
+        <div class="result-score-big" id="res-score">0<span>/95</span></div>
+        <div class="result-label" id="res-pct">0% de aproveitamento</div>
+        <div class="result-grade" id="res-grade"></div>
+      </div>
+      <div style="padding:12px 14px 4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">
+        Por Objeto de Controle
+      </div>
+      <div class="breakdown-list" id="breakdown-list"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-print" onclick="window.print()">🖨 Imprimir / PDF</button>
+      <button class="btn-reset" onclick="resetAll()">↺ Nova Auditoria</button>
+      <button onclick="openHistorico()" style="flex:1;padding:13px;border-radius:9px;background:#001E50;border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">📋 Histórico <span id="btn-hist-badge" style="background:#fff;color:#001E50;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:800"></span></button>
+    </div>
+  </div>
+
+  <!-- ── HISTÓRICO ── -->
+  <div id="hist-section" style="display:none;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:17px;font-weight:700;color:var(--vw-blue)">📋 Histórico de Auditorias</div>
+      <button onclick="closeHistorico()" style="padding:7px 14px;border-radius:7px;background:#F0F4F8;border:1.5px solid #C0C8D8;font-size:12px;font-weight:700;cursor:pointer">← Voltar</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="hf-todos" onclick="setHistFiltro('todos')" style="padding:6px 14px;border-radius:7px;border:1.5px solid #001E50;background:#001E50;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Todos</button>
+      <button id="hf-semana" onclick="setHistFiltro('semana')" style="padding:6px 14px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:12px;font-weight:700;cursor:pointer">Esta semana</button>
+      <button id="hf-semana-1" onclick="setHistFiltro('semana-1')" style="padding:6px 14px;border-radius:7px;border:1.5px solid #C0C8D8;background:#F0F4F8;color:#1A2636;font-size:12px;font-weight:700;cursor:pointer">Semana anterior</button>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+</main>
+
+<div class="nav-btns" id="nav-btns">
+  <button class="btn-prev" id="btn-prev" onclick="goSection(-1)">← Anterior</button>
+  <button class="btn-next" id="btn-next" onclick="goSection(1)">Próximo →</button>
+  <button class="btn-finish" id="btn-finish" onclick="showResult()">✔ Finalizar</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// DADOS DO CHECKLIST 5S – FAHRWERK
+// Baseado no formulário Konzern-Sistema de Produção v27.08.2013
+// ══════════════════════════════════════════
+const SECTIONS = [
+  {
+    id: 1, name: "Meios de Produção",
+    questions: [
+      { id:"1a", text:"Todas as ferramentas que usam ar comprimido estão protegidas? E sem vazamentos?", pts:{sim:2,nao:0,na:0} },
+      { id:"1b", text:"Todos os meios de produção são guardados no local correto (em suportes para ferramentas ou armários)?", pts:{sim:2,nao:0,na:0} },
+      { id:"1c", text:"Os meios de produção não guardados no local correto estão protegidos? E sem vazamentos?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 2, name: "Área",
+    questions: [
+      { id:"2a", text:"A cor do piso e a pintura se encontra em bom estado? Todos os objetos estão nos lugares definidos?", pts:{sim:2,nao:0,na:0} },
+      { id:"2b", text:"O chão está limpo?", pts:{sim:2,nao:0,na:0} },
+      { id:"2c", text:"Todos os lixões de lixo estão demarcados e identificados?", pts:{sim:2,nao:0,na:0} },
+      { id:"2d", text:"As informações destacadas no quadro são relevantes?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 3, name: "Quadro do Time",
+    questions: [
+      { id:"3a", text:"As informações são datadas e apresentam data de revisão/atualização?", pts:{sim:2,nao:0,na:0} },
+      { id:"3b", text:"O quadro contém APENAS informações atualizadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"3c", text:"O local do quadro está demarcado no solo e seus campos estão identificados?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 4, name: "Instalações e Iluminação",
+    questions: [
+      { id:"4a", text:"Há lixo nas instalações?", pts:{sim:0,nao:2,na:0} },
+      { id:"4b", text:"A área está bem iluminada?", pts:{sim:2,nao:0,na:0} },
+      { id:"4c", text:"Todas as instalações estão corretamente identificadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"4d", text:"Todas as ferramentas especiais e meios auxiliares (Chapelonas e dispositivos) têm local definido e identificado?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 5, name: "Área / Prateleira de Refúgio",
+    questions: [
+      { id:"5a", text:"Todas as peças estão identificadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"5b", text:"Todas as instalações estão corretamente identificadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"5c", text:"As peças estão dispostas de modo a evitar que se danifiquem?", pts:{sim:2,nao:0,na:0} },
+      { id:"5d", text:"Todas as peças refugadas estão no local designado para este fim?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 6, name: "Carrinhos",
+    questions: [
+      { id:"6a", text:"Há lixo nos carrinhos?", pts:{sim:0,nao:2,na:0} },
+      { id:"6b", text:"Todas as ferramentas estão organizadas e têm local definido e identificado no carrinho?", pts:{sim:2,nao:0,na:0} },
+      { id:"6c", text:"Todos os objetos transportados nos carrinhos estão identificados e limpos?", pts:{sim:2,nao:0,na:0} },
+      { id:"6d", text:"Todas as superfícies de armazenamento de peças estão limpas?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 7, name: "Canto de Grupo",
+    questions: [
+      { id:"7a", text:"O canto de grupo está organizado e sem móveis em excesso?", pts:{sim:2,nao:0,na:0} },
+      { id:"7b", text:"Todas as pastas estão corretamente identificadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"7c", text:"As identificações (na frente e atrás) são claras e correspondem ao padrão?", pts:{sim:2,nao:0,na:0} },
+      { id:"7d", text:"Todas as pastas estão corretamente identificadas?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 8, name: "Racks / Prateleiras",
+    questions: [
+      { id:"8a", text:"As peças estão desordenadas e/ou misturadas?", pts:{sim:0,nao:2,na:0} },
+      { id:"8b", text:"O chão abaixo dos racks está limpo?", pts:{sim:2,nao:0,na:0} },
+      { id:"8c", text:"Há um nível exclusivo para retorno de embalagens vazias definido?", pts:{sim:2,nao:0,na:0} },
+      { id:"8d", text:"Há excesso de peças?", pts:{sim:0,nao:2,na:0} },
+      { id:"8e", text:"Todos os painéis e apresentações de documentos são legíveis e correspondem ao padrão?", pts:{sim:2,nao:0,na:0} },
+      { id:"8f", text:"As peças estão guardadas no local (pa, vassoura, etc.) disponíveis para o uso e em local definido?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 9, name: "Área para Reuniões da Equipe",
+    questions: [
+      { id:"9a", text:"Os armários estão identificados?", pts:{sim:2,nao:0,na:0} },
+      { id:"9b", text:"O plano de ações do 5S está atualizado?", pts:{sim:2,nao:0,na:0} },
+      { id:"9c", text:"Todos os objetos estão corretamente identificados?", pts:{sim:2,nao:0,na:0} },
+      { id:"9d", text:"Todas as superfícies de trabalho estão limpas e organizadas (sem bolsas ou agasalhos no piso)?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 10, name: "Painéis de Ferramentas e Materiais de Limpeza",
+    questions: [
+      { id:"10a", text:"As ferramentas utilizadas estão dispostas em um painel e têm seus contornos demarcados?", pts:{sim:2,nao:0,na:0} },
+      { id:"10b", text:"Os painéis de ferramentas estão conforme padrão estabelecido pela área? (conforme documentação / foto do padrão)", pts:{sim:2,nao:0,na:0} },
+      { id:"10c", text:"As ferramentas utilizadas estão dispostas em um painel e têm seus contornos demarcados?", pts:{sim:2,nao:0,na:0} },
+      { id:"10d", text:"Há objetos para limpeza (pa, vassoura, etc.) disponíveis para o uso e em local definido?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 11, name: "Armários",
+    questions: [
+      { id:"11a", text:"Os armários estão registrados no inventário da área e existe um controle do que é estocado?", pts:{sim:2,nao:0,na:0} },
+      { id:"11b", text:"Os objetos guardados dentro do armário estão separados uns dos outros e ordenados?", pts:{sim:2,nao:0,na:0} },
+      { id:"11c", text:"Os produtos químicos são guardados corretamente (em um armário específico)?", pts:{sim:2,nao:0,na:0} },
+      { id:"11d", text:"As ferramentas estão nos seus lugares (conforme demarcações)?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 12, name: "Ferramentas",
+    questions: [
+      { id:"12a", text:"As ferramentas estão nos seus lugares (conforme demarcações)?", pts:{sim:2,nao:0,na:0} },
+      { id:"12b", text:"São utilizadas as caixas de ferramentas adequadas a cada atividade?", pts:{sim:2,nao:0,na:0} },
+      { id:"12c", text:"As caixas de ferramentas estão muito cheias?", pts:{sim:0,nao:2,na:0} }
+    ]
+  },
+  {
+    id: 13, name: "Caixa de Ferramentas",
+    questions: [
+      { id:"13a", text:"Os objetos afiados estão protegidos para evitar acidentes?", pts:{sim:2,nao:0,na:0} },
+      { id:"13b", text:"Todas as posições iniciais estão demarcadas?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 14, name: "Posto de Trabalho",
+    questions: [
+      { id:"14a", text:"As superfícies de trabalho estão limpas e ordenadas?", pts:{sim:2,nao:0,na:0} },
+      { id:"14b", text:"As peças armazenadas de forma provisória estão nos lugares certos?", pts:{sim:2,nao:0,na:0} },
+      { id:"14c", text:"Caixa de peças estão além da capacidade ou há excesso de caixas de peças?", pts:{sim:0,nao:2,na:0} },
+      { id:"14d", text:"Todas as posições iniciais estão demarcadas?", pts:{sim:2,nao:0,na:0} }
+    ]
+  },
+  {
+    id: 15, name: "Lixões de Lixo",
+    questions: [
+      { id:"15a", text:"As peças armazenadas de forma provisória estão nos lugares certos?", pts:{sim:2,nao:0,na:0} },
+      { id:"15b", text:"Os lixões de lixo têm sua posição definida? Eles estão posicionados nos locais demarcados?", pts:{sim:2,nao:0,na:0} },
+      { id:"15c", text:"Os resíduos estão nos lixos corretos (conforme o tipo)?", pts:{sim:2,nao:0,na:0} },
+      { id:"15d", text:"Os lixões são esvaziados regularmente?", pts:{sim:2,nao:0,na:0} }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let answers = {};
+let observations = {};
+let currentSection = 0;
+let historico = []; // auditorias salvas nesta sessão
+let histFiltro = 'todos'; // 'todos' | 'semana' | 'semana-1'
+
+
+// Calc total possible pts
+const TOTAL_PTS = 95;
+
+// ══════════════════════════════════════════
+// BUILD DOM
+// ══════════════════════════════════════════
+function buildUI() {
+  const container = document.getElementById('sections-container');
+  const navTabs = document.getElementById('nav-tabs');
+  container.innerHTML = '';
+  navTabs.innerHTML = '';
+
+  SECTIONS.forEach((sec, idx) => {
+    // Tab
+    const tab = document.createElement('div');
+    tab.className = 'nav-tab' + (idx === 0 ? ' active' : '');
+    tab.dataset.idx = idx;
+    tab.innerHTML = `<span class="tab-dot"></span>${sec.id}. ${sec.name}`;
+    tab.onclick = () => jumpToSection(idx);
+    navTabs.appendChild(tab);
+
+    // Section
+    const secEl = document.createElement('div');
+    secEl.className = 'section' + (idx === 0 ? ' active' : '');
+    secEl.id = `sec-${idx}`;
+
+    const maxPts = sec.questions.reduce((a, q) => a + Math.max(...Object.values(q.pts)), 0);
+
+    secEl.innerHTML = `
+      <div class="section-header">
+        <div class="section-num">${sec.id}</div>
+        <div class="section-title">${sec.name}</div>
+        <div class="section-pts" id="sec-pts-${idx}">0/${maxPts} pts</div>
+      </div>
+      <div class="questions-wrap" id="qwrap-${idx}"></div>
+    `;
+    container.appendChild(secEl);
+
+    const qwrap = secEl.querySelector(`#qwrap-${idx}`);
+    sec.questions.forEach(q => {
+      const row = document.createElement('div');
+      row.className = 'question-row';
+      row.innerHTML = `
+        <div class="question-text">${q.text}</div>
+        <div class="answer-row">
+          <button class="ans-btn sim" data-q="${q.id}" data-val="sim">SIM (${q.pts.sim}pt)</button>
+          <button class="ans-btn nao" data-q="${q.id}" data-val="nao">NÃO (${q.pts.nao}pt)</button>
+          <button class="ans-btn na" data-q="${q.id}" data-val="na">N/A</button>
+        </div>
+        <textarea class="obs-input" id="obs-${q.id}" placeholder="Observação (opcional)..." rows="2"></textarea>
+      `;
+      qwrap.appendChild(row);
+
+      // event listeners
+      row.querySelectorAll('.ans-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const qid = btn.dataset.q;
+          const val = btn.dataset.val;
+          answers[qid] = val;
+
+          // update buttons
+          row.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('sel'));
+          btn.classList.add('sel');
+
+          // show obs on NÃO
+          const obsEl = document.getElementById(`obs-${qid}`);
+          if (val === 'nao') obsEl.classList.add('show');
+          else obsEl.classList.remove('show');
+
+          updateScores();
+        });
+      });
+
+      const obsEl = document.getElementById(`obs-${q.id}`);
+      obsEl.addEventListener('input', () => {
+        observations[q.id] = obsEl.value;
+      });
+    });
+  });
+
+  updateScores();
+  updateNav();
+
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('meta-data').value = today;
+}
+
+// ══════════════════════════════════════════
+// SCORE LOGIC
+// ══════════════════════════════════════════
+function calcScore() {
+  let total = 0;
+  SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      const ans = answers[q.id];
+      if (ans && q.pts[ans] !== undefined) total += q.pts[ans];
+    });
+  });
+  return total;
+}
+
+function calcSectionScore(sec) {
+  let pts = 0, max = 0;
+  sec.questions.forEach(q => {
+    const ans = answers[q.id];
+    const possible = Math.max(...Object.values(q.pts));
+    max += possible;
+    if (ans && q.pts[ans] !== undefined) pts += q.pts[ans];
+  });
+  return { pts, max };
+}
+
+function countAnswered() {
+  let total = 0, answered = 0;
+  SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      total++;
+      if (answers[q.id]) answered++;
+    });
+  });
+  return { total, answered };
+}
+
+function updateScores() {
+  const score = calcScore();
+  document.getElementById('live-score').innerHTML = `${score}/${TOTAL_PTS}<span>pontos</span>`;
+
+  const { total, answered } = countAnswered();
+  const pct = total ? Math.round((answered / total) * 100) : 0;
+  document.getElementById('progress-text').textContent = `${answered} de ${total} respondidas`;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // per section
+  SECTIONS.forEach((sec, idx) => {
+    const { pts, max } = calcSectionScore(sec);
+    const el = document.getElementById(`sec-pts-${idx}`);
+    if (el) el.textContent = `${pts}/${max} pts`;
+
+    // update tab dot
+    const tab = document.querySelector(`.nav-tab[data-idx="${idx}"]`);
+    if (tab) {
+      const answered = sec.questions.filter(q => answers[q.id]).length;
+      tab.classList.remove('done', 'partial');
+      if (answered === sec.questions.length) tab.classList.add('done');
+      else if (answered > 0) tab.classList.add('partial');
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goSection(dir) {
+  const next = currentSection + dir;
+  if (next < 0 || next >= SECTIONS.length) return;
+  jumpToSection(next);
+}
+
+function jumpToSection(idx) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+  document.getElementById(`sec-${idx}`).classList.add('active');
+  document.querySelector(`.nav-tab[data-idx="${idx}"]`).classList.add('active');
+
+  // scroll tab into view
+  document.querySelector(`.nav-tab[data-idx="${idx}"]`).scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+
+  currentSection = idx;
+  updateNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateNav() {
+  const prev = document.getElementById('btn-prev');
+  const next = document.getElementById('btn-next');
+  const finish = document.getElementById('btn-finish');
+
+  prev.style.display = currentSection === 0 ? 'none' : 'block';
+
+  if (currentSection === SECTIONS.length - 1) {
+    next.style.display = 'none';
+    finish.style.display = 'block';
+  } else {
+    next.style.display = 'block';
+    finish.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// RESULT
+// ══════════════════════════════════════════
+function showResult() {
+  const score = calcScore();
+  const pct = Math.round((score / TOTAL_PTS) * 100);
+
+  document.getElementById('checklist-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'block';
+  document.getElementById('nav-btns').style.display = 'none';
+
+  document.getElementById('res-score').innerHTML = `${score}<span>/${TOTAL_PTS}</span>`;
+  document.getElementById('res-pct').textContent = `${pct}% de aproveitamento`;
+
+  // Salvar no histórico
+  historico.unshift({
+    ts: new Date().toISOString(),
+    data: (document.getElementById('meta-data')||{}).value||'',
+    posto: (document.getElementById('meta-posto')||{}).value||'',
+    verificador: (document.getElementById('meta-verif')||{}).value||'',
+    score, pct,
+    secScores: SECTIONS.map(function(s){
+      var sp=0,sm=0;
+      s.questions.forEach(function(q){
+        var a=answers[q.id]; if(!a||a==='na') return;
+        sp+=(q.pts||{sim:2,nao:0})[a]||0;
+        sm+=(q.pts||{sim:2,nao:0}).sim||2;
+      });
+      return {name:s.name,pts:sp,max:sm};
+    })
+  });
+  updateHistBadge();
+
+  const grade = document.getElementById('res-grade');
+  if (pct >= 90) {
+    grade.textContent = '🏆 Excelente'; grade.style.cssText = 'background:#00a550;color:#fff';
+  } else if (pct >= 75) {
+    grade.textContent = '✅ Bom'; grade.style.cssText = 'background:#4a9eff;color:#fff';
+  } else if (pct >= 60) {
+    grade.textContent = '⚠️ Regular'; grade.style.cssText = 'background:#f5a623;color:#fff';
+  } else {
+    grade.textContent = '❌ Crítico'; grade.style.cssText = 'background:#d0021b;color:#fff';
+  }
+
+  const list = document.getElementById('breakdown-list');
+  list.innerHTML = '';
+  SECTIONS.forEach(sec => {
+    const { pts, max } = calcSectionScore(sec);
+    const pctSec = max ? Math.round((pts / max) * 100) : 0;
+    const color = pctSec >= 90 ? '#00a550' : pctSec >= 60 ? '#f5a623' : '#d0021b';
+
+    const item = document.createElement('div');
+    item.className = 'breakdown-item';
+    item.innerHTML = `
+      <div class="breakdown-num">${sec.id}</div>
+      <div class="breakdown-name">${sec.name}</div>
+      <div class="breakdown-bar-wrap">
+        <div class="breakdown-bar">
+          <div class="breakdown-bar-fill" style="width:${pctSec}%;background:${color}"></div>
+        </div>
+      </div>
+      <div class="breakdown-score" style="color:${color}">${pts}/${max}</div>
+    `;
+    list.appendChild(item);
+  });
+
+  // Add NOK items summary
+  const nokItems = [];
+  SECTIONS.forEach(sec => {
+    sec.questions.forEach(q => {
+      if (answers[q.id] === 'nao') {
+        nokItems.push({ sec: sec.name, q: q.text, obs: observations[q.id] || '' });
+      }
+    });
+  });
+
+  if (nokItems.length > 0) {
+    const nokWrap = document.createElement('div');
+    nokWrap.style.cssText = 'padding:12px 14px 4px;font-size:11px;font-weight:700;color:#d0021b;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px';
+    nokWrap.textContent = `⚠ Pontos de Ação (${nokItems.length} itens NÃO conforme)`;
+    document.getElementById('result-section').querySelector('.result-card').appendChild(nokWrap);
+
+    const nokList = document.createElement('div');
+    nokList.style.cssText = 'padding:0 14px 12px';
+    nokItems.forEach((item, i) => {
+      const el = document.createElement('div');
+      el.style.cssText = 'padding:8px 0;border-bottom:1px solid #dde1e9;font-size:11px';
+      el.innerHTML = `<div style="color:#d0021b;font-weight:600;margin-bottom:2px">${i+1}. [${item.sec}]</div>
+        <div style="color:#374151;line-height:1.4">${item.q}</div>
+        ${item.obs ? `<div style="color:#6b7280;font-style:italic;margin-top:2px">Obs: ${item.obs}</div>` : ''}`;
+      nokList.appendChild(el);
+    });
+    document.getElementById('result-section').querySelector('.result-card').appendChild(nokList);
+  }
+}
+
+
+function updateHistBadge(){
+  var b=document.getElementById('btn-hist-badge');
+  if(b) b.textContent=historico.length>0?historico.length:'';
+}
+
+function histDateFilter(item){
+  if(histFiltro==='todos') return true;
+  if(!item.data) return histFiltro==='todos';
+  var rd=new Date(item.data+'T00:00:00'), now=new Date(), dow=now.getDay()||7;
+  if(histFiltro==='semana'){
+    var mon=new Date(now); mon.setDate(now.getDate()-dow+1); mon.setHours(0,0,0,0);
+    return rd>=mon;
+  }
+  if(histFiltro==='semana-1'){
+    var pm=new Date(now); pm.setDate(now.getDate()-dow-6); pm.setHours(0,0,0,0);
+    var ps=new Date(now); ps.setDate(now.getDate()-dow); ps.setHours(23,59,59);
+    return rd>=pm&&rd<=ps;
+  }
+  return true;
+}
+
+function setHistFiltro(f){
+  histFiltro=f;
+  ['todos','semana','semana-1'].forEach(function(id){
+    var b=document.getElementById('hf-'+id);
+    if(b){b.style.background=id===f?'#001E50':'#F0F4F8';
+          b.style.color=id===f?'#fff':'#1A2636';
+          b.style.borderColor=id===f?'#001E50':'#C0C8D8';}
+  });
+  renderHistorico();
+}
+
+function renderHistorico(){
+  var el=document.getElementById('hist-list'); if(!el) return;
+  var lista=historico.filter(histDateFilter);
+  if(!lista.length){
+    el.innerHTML='<div style="text-align:center;padding:40px 20px;color:#8B9CB5;font-size:13px">Nenhuma auditoria neste período.</div>';
+    return;
+  }
+  el.innerHTML=lista.map(function(h,i){
+    var cor=h.pct>=90?'#00a550':h.pct>=75?'#4a9eff':h.pct>=60?'#ff9800':'#e53935';
+    var grade=h.pct>=90?'Excelente':h.pct>=75?'Bom':h.pct>=60?'Regular':'Atenção';
+    var bars=h.secScores?h.secScores.map(function(s){
+      var p=s.max?Math.round(s.pts/s.max*100):0;
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+        +'<div style="font-size:10px;color:#6B7D96;width:120px;flex-shrink:0">'+s.name+'</div>'
+        +'<div style="flex:1;height:5px;background:#E0E8F0;border-radius:3px;overflow:hidden">'
+        +'<div style="height:100%;width:'+p+'%;background:'+cor+';border-radius:3px"></div></div>'
+        +'<div style="font-size:10px;font-weight:700;color:'+cor+';width:32px;text-align:right">'+p+'%</div>'
+        +'</div>';
+    }).join(''):'';
+    return '<div style="background:#fff;border-radius:10px;border:1px solid #E0E8F0;'
+      +'margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,30,80,.06)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF2F7">'
+      +'<div>'
+      +'<div style="font-size:13px;font-weight:700;color:#001E50">'+(h.data||'Sem data')+(h.posto?' · '+h.posto:'')+'</div>'
+      +'<div style="font-size:11px;color:#6B7D96;margin-top:2px">'+(h.verificador?'Monitor: '+h.verificador:'')+'</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:22px;font-weight:700;color:'+cor+'">'+h.score+'<span style="font-size:13px;color:#8B9CB5">/95</span></div>'
+      +'<div style="font-size:10px;font-weight:700;color:'+cor+'">'+grade+' · '+h.pct+'%</div>'
+      +'</div>'
+      +'</div>'
+      +(bars?'<div style="padding:10px 14px">'+bars+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function openHistorico(){
+  document.getElementById('checklist-section').style.display='none';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('nav-btns').style.display='none';
+  document.getElementById('hist-section').style.display='block';
+  renderHistorico();
+}
+
+function closeHistorico(){
+  document.getElementById('hist-section').style.display='none';
+  document.getElementById('result-section').style.display='block';
+}
+function resetAll() {
+  answers = {};
+  observations = {};
+  currentSection = 0;
+
+  document.getElementById('checklist-section').style.display = 'block';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('nav-btns').style.display = 'flex';
+
+  buildUI();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+buildUI();
+</script>
+</body>
+</html>

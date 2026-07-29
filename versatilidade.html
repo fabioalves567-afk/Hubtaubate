@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#003087">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Versatilidade · Fahrwerk</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:      #f0f3f8;
+  --white:   #ffffff;
+  --border:  #dde2ec;
+  --accent:  #003087;
+  --accent2: #0059c8;
+  --text:    #111827;
+  --muted:   #6b7280;
+  --ok:      #059669;
+  --warn:    #d97706;
+  --danger:  #dc2626;
+  --font:    'DM Sans', sans-serif;
+  --mono:    'DM Mono', monospace;
+  --l0: #f1f3f7;
+  --l1: #fef08a;
+  --l2: #fdba74;
+  --l3: #6ee7b7;
+  --l4: #34d399;
+  --l5: #059669;
+  --r: 10px;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100dvh; overflow-x:hidden; }
+
+/* ─ HEADER ─────────────────────────────────────────────── */
+.app-header { background:var(--accent); color:#fff; padding:12px 16px 10px; position:sticky; top:0; z-index:200; box-shadow:0 2px 12px rgba(0,48,135,0.3); }
+.header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.header-brand { display:flex; align-items:center; gap:8px; }
+.brand-icon { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; }
+.brand-title { font-size:17px; font-weight:700; }
+.brand-sub   { font-size:10px; opacity:0.65; letter-spacing:0.5px; margin-top:1px; }
+.btn-info    { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); border-radius:8px; padding:6px 12px; color:#fff; font-size:12px; font-weight:600; cursor:pointer; }
+.tabs { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { flex-shrink:0; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:5px 14px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.75); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+.tab.active { background:#fff; color:var(--accent); }
+
+/* ─ STATS BAR ────────────────────────────────────────────── */
+.stats-bar { display:grid; grid-template-columns:repeat(4,1fr); background:var(--white); border-bottom:1px solid var(--border); text-align:center; }
+.stat-box { padding:8px 4px; border-right:1px solid var(--border); }
+.stat-box:last-child { border-right:none; }
+.stat-n   { font-size:20px; font-weight:700; color:var(--accent); line-height:1; }
+.stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+/* ─ VIEW SWITCHER ────────────────────────────────────────── */
+.view-switcher { display:flex; background:var(--white); border-bottom:2px solid var(--border); }
+.vs-btn { flex:1; padding:10px 4px; font-family:var(--font); font-size:11px; font-weight:700; letter-spacing:0.3px; color:var(--muted); background:none; border:none; border-bottom:3px solid transparent; margin-bottom:-2px; cursor:pointer; white-space:nowrap; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:4px; }
+.vs-btn .vs-icon { font-size:14px; }
+.vs-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* ─ LEGEND ───────────────────────────────────────────────── */
+.legend-bar { background:var(--white); border-bottom:1px solid var(--border); padding:8px 12px; display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; align-items:center; }
+.legend-bar::-webkit-scrollbar { display:none; }
+.leg-item { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.leg-dot  { width:16px; height:16px; border-radius:3px; flex-shrink:0; }
+.leg-text { font-size:10px; color:var(--muted); white-space:nowrap; }
+
+/* ─ INDICATOR ROW ────────────────────────────────────────── */
+.indicator-row { display:flex; gap:6px; padding:6px 12px; overflow-x:auto; scrollbar-width:none; background:var(--white); border-bottom:1px solid var(--border); min-height:36px; align-items:center; }
+.indicator-row::-webkit-scrollbar { display:none; }
+.ind-chip { flex-shrink:0; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:600; background:var(--white); border:1px solid var(--border); color:var(--muted); cursor:pointer; }
+.ind-chip.danger { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
+.ind-chip.warn   { background:#fef3c7; border-color:#fcd34d; color:#92400e; }
+.ind-chip.ok     { background:#d1fae5; border-color:#6ee7b7; color:#065f46; }
+
+/* ─ SEARCH ───────────────────────────────────────────────── */
+.search-bar { background:var(--white); border-bottom:1px solid var(--border); padding:8px 12px; }
+.search-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:var(--font); font-size:13px; color:var(--text); outline:none; -webkit-appearance:none; }
+.search-input:focus { border-color:var(--accent2); }
+
+/* ─ MATRIX ───────────────────────────────────────────────── */
+.matrix-section { overflow:auto; max-height:calc(100dvh - 310px); padding-bottom:80px; }
+.matrix-table { border-collapse:collapse; min-width:max-content; }
+.corner-cell { position:sticky; left:0; top:0; z-index:30; background:var(--accent); padding:8px 12px; min-width:160px; border-right:2px solid rgba(255,255,255,0.2); border-bottom:2px solid rgba(255,255,255,0.2); }
+.op-header-cell { position:sticky; top:0; z-index:20; background:var(--accent); color:#fff; padding:6px 4px; text-align:center; min-width:44px; max-width:44px; border-right:1px solid rgba(255,255,255,0.15); border-bottom:2px solid rgba(255,255,255,0.2); vertical-align:bottom; cursor:pointer; }
+.op-header-inner { display:flex; flex-direction:column; align-items:center; gap:3px; writing-mode:vertical-rl; transform:rotate(180deg); padding:4px 0; height:110px; }
+.op-code { font-family:var(--mono); font-size:10px; font-weight:600; opacity:0.85; }
+.op-desc { font-size:9px; opacity:0.65; line-height:1.2; }
+.name-cell { position:sticky; left:0; z-index:10; background:var(--white); padding:0 10px; min-width:160px; border-right:2px solid var(--border); border-bottom:1px solid var(--border); vertical-align:middle; height:44px; cursor:pointer; }
+.name-cell:hover { background:#f8faff; }
+.name-cell-inner { display:flex; align-items:center; gap:8px; }
+.matricula { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.nome { font-size:13px; font-weight:600; }
+.ext-badge { font-size:9px; background:#ede9fe; color:#7c3aed; border-radius:3px; padding:1px 5px; font-weight:700; }
+.skill-cell { border:1px solid var(--border); padding:4px; text-align:center; vertical-align:middle; cursor:pointer; transition:background 0.1s; min-width:44px; max-width:44px; height:44px; }
+.skill-cell:hover { background:#f0f4ff; }
+.skill-cell:active { transform:scale(0.9); }
+.level-svg { display:block; margin:0 auto; }
+.group-row td { background:var(--accent); color:#fff; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 12px; position:sticky; left:0; }
+.tr-hidden { display:none !important; }
+
+/* ─ AI VIEW ─────────────────────────────────────────────── */
+.ai-view { padding:12px; padding-bottom:80px; overflow-y:auto; max-height:calc(100dvh - 200px); }
+.ai-intro { background:linear-gradient(135deg,#003087,#0059c8); color:#fff; border-radius:var(--r); padding:16px; margin-bottom:14px; }
+.ai-intro-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+.ai-intro-sub   { font-size:12px; opacity:0.8; line-height:1.6; }
+.ai-generate-btn { width:100%; background:var(--accent); color:#fff; border:none; border-radius:var(--r); padding:15px; font-family:var(--font); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; letter-spacing:0.3px; }
+.ai-generate-btn:disabled { opacity:0.6; cursor:wait; }
+.ai-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); margin-bottom:12px; overflow:hidden; }
+.ai-card-hd { padding:11px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; background:#fafbff; }
+.ai-card-icon  { font-size:17px; }
+.ai-card-title { font-size:12px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--accent); }
+.ai-card-body  { padding:14px; }
+.risk-badge { border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
+.risk-ALTO  { background:#fee2e2; color:#dc2626; }
+.risk-MEDIO { background:#fef3c7; color:#92400e; }
+.risk-BAIXO { background:#d1fae5; color:#065f46; }
+.ai-item { padding:10px 0; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; }
+.ai-item:last-child { border-bottom:none; padding-bottom:0; }
+.ai-item-content { flex:1; }
+.ai-item-title { font-size:13px; font-weight:600; }
+.ai-item-sub   { font-size:12px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.ai-prio { width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.ai-op-code { font-family:var(--mono); font-size:10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:1px 6px; }
+.ai-loading { text-align:center; padding:40px 20px; color:var(--muted); }
+.ai-loading-spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 14px; }
+@keyframes spin { to{transform:rotate(360deg);} }
+.ai-error { background:#fee2e2; border:1px solid #fca5a5; border-radius:var(--r); padding:14px; color:#dc2626; font-size:13px; line-height:1.6; }
+.ai-rec-card { background:var(--white); border:1px solid var(--border); border-left:4px solid var(--accent); border-radius:var(--r); margin-bottom:12px; overflow:hidden; }
+
+/* ─ HISTORY VIEW ─────────────────────────────────────────── */
+.history-view { padding:12px; padding-bottom:80px; overflow-y:auto; max-height:calc(100dvh - 200px); }
+.hist-empty { text-align:center; padding:48px 20px; color:var(--muted); }
+.hist-empty-icon { font-size:40px; margin-bottom:12px; }
+.hist-item { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:12px 14px; margin-bottom:8px; display:flex; align-items:flex-start; gap:12px; }
+.hist-arrow { font-size:22px; line-height:1; margin-top:2px; }
+.hist-body { flex:1; min-width:0; }
+.hist-op  { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hist-sub { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.hist-ts  { font-size:10px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+.btn-danger-sm { width:100%; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:var(--r); padding:12px; font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; margin-top:8px; }
+
+/* ─ BOTTOM BAR ───────────────────────────────────────────── */
+.bottom-bar { position:fixed; bottom:0; left:0; right:0; z-index:100; background:var(--white); border-top:1px solid var(--border); padding:6px 8px; display:grid; grid-template-columns:repeat(5,1fr); gap:4px; box-shadow:0 -4px 16px rgba(0,0,0,0.08); }
+.bb-btn { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:7px 2px; font-family:var(--font); font-size:9px; font-weight:600; color:var(--muted); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; letter-spacing:0.3px; }
+.bb-btn:active { background:var(--border); }
+.bb-icon { font-size:15px; }
+
+/* ─ MODAL ────────────────────────────────────────────────── */
+.overlay { display:none; position:fixed; inset:0; z-index:300; background:rgba(17,24,39,0.5); backdrop-filter:blur(4px); overflow-y:auto; }
+.overlay.open { display:flex; align-items:flex-start; justify-content:center; padding:16px; }
+.modal { background:var(--white); border-radius:14px; width:100%; max-width:480px; box-shadow:0 16px 48px rgba(0,0,0,0.18); animation:up 0.2s ease both; overflow:hidden; }
+@keyframes up { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+.modal-hd { background:var(--accent); color:#fff; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; }
+.modal-hd-title { font-size:17px; font-weight:700; }
+.modal-close { background:none; border:none; color:rgba(255,255,255,0.7); font-size:22px; cursor:pointer; line-height:1; padding:0 4px; }
+.modal-body { padding:16px; }
+.level-picker { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+.level-opt { border-radius:10px; padding:12px 8px; text-align:center; cursor:pointer; transition:all 0.15s; border:2px solid var(--border); }
+.level-opt.selected { transform:scale(1.04); }
+.level-opt-n   { font-size:22px; font-weight:800; line-height:1; }
+.level-opt-lbl { font-size:10px; margin-top:4px; color:var(--muted); line-height:1.3; }
+.form-group { margin-bottom:12px; }
+.form-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:4px; display:block; }
+.form-control { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-family:var(--font); font-size:14px; outline:none; -webkit-appearance:none; }
+.form-control:focus { border-color:var(--accent2); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-prim { width:100%; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:13px; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; margin-top:10px; }
+.btn-prim:active { opacity:0.85; }
+.btn-sec { width:100%; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; margin-top:8px; }
+.btn-danger { width:100%; background:transparent; color:#dc2626; border:1px solid #dc2626; border-radius:8px; padding:11px; font-family:var(--font); font-size:13px; font-weight:600; cursor:pointer; margin-top:8px; }
+.sep { border:none; border-top:1px solid var(--border); margin:12px 0; }
+.cov-bar  { height:6px; border-radius:3px; background:var(--border); margin-top:4px; }
+.cov-fill { height:100%; border-radius:3px; background:var(--ok); }
+.op-detail-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:8px; }
+.op-detail-code { font-family:var(--mono); font-size:12px; color:var(--accent2); font-weight:600; }
+.op-detail-desc { font-size:14px; font-weight:600; margin-top:2px; }
+.op-detail-nr   { font-size:11px; color:var(--muted); }
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.info-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; }
+.info-box-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; }
+.info-box-value { font-size:14px; font-weight:700; margin-top:2px; }
+
+/* Print */
+@media print {
+  .bottom-bar,.app-header,.legend-bar,.view-switcher,.search-bar,.indicator-row,.stats-bar { display:none!important; }
+  .matrix-section { max-height:none; overflow:visible; }
+  .matrix-table { font-size:8px; }
+  .name-cell { min-width:120px; }
+  .skill-cell,.op-header-cell { min-width:28px; max-width:28px; height:28px; }
+  .op-header-inner { height:80px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div class="header-brand">
+      <div>
+        <div class="brand-title">VERSATILIDADE</div>
+        <div class="brand-sub">FAHRWERK · TIME 3 · TURNO 2º</div>
+      </div>
+    </div>
+    <button class="btn-info" id="btnInfo">ℹ Célula</button>
+  </div>
+  <div class="tabs" id="tabsBar"></div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="view-switcher">
+  <button class="vs-btn active" data-view="matrix"><span class="vs-icon">📊</span>MATRIZ</button>
+  <button class="vs-btn" data-view="ai"><span class="vs-icon">🤖</span>ANÁLISE IA</button>
+  <button class="vs-btn" data-view="history"><span class="vs-icon">📋</span>HISTÓRICO</button>
+</div>
+
+<!-- ── MATRIX VIEW ─────────────────────────────────────── -->
+<div id="viewMatrix">
+  <div class="legend-bar">
+    <span style="font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;">NÍVEL:</span>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l0);border:1px solid var(--border);"></div><span class="leg-text">0 · Não iniciado</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l1);"></div><span class="leg-text">1 · Em treinamento</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l2);"></div><span class="leg-text">2 · Executa c/ sup.</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l3);"></div><span class="leg-text">3 · Executa sozinho</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l4);"></div><span class="leg-text">4 · Qualificado</span></div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--l5);"></div><span class="leg-text">5 · Multiplica</span></div>
+  </div>
+  <div class="indicator-row" id="indicatorRow"></div>
+  <div class="search-bar">
+    <input class="search-input" id="searchInput" type="text" placeholder="🔍  Buscar operador pelo nome...">
+  </div>
+  <div class="matrix-section" id="matrixSection"></div>
+</div>
+
+<!-- ── AI VIEW ────────────────────────────────────────────── -->
+<div id="viewAI" style="display:none">
+  <div class="ai-view">
+    <div class="ai-intro">
+      <div class="ai-intro-title">🤖 Análise Inteligente</div>
+      <div class="ai-intro-sub">O modelo analisa sua matriz, identifica riscos operacionais e gera um plano de treinamento priorizado para esta semana.</div>
+    </div>
+    <button class="ai-generate-btn" id="btnGerarAnalise">🤖 GERAR ANÁLISE</button>
+    <div id="aiResult"></div>
+  </div>
+</div>
+
+<!-- ── HISTORY VIEW ───────────────────────────────────────── -->
+<div id="viewHistory" style="display:none">
+  <div class="history-view" id="historyContent"></div>
+</div>
+
+<!-- ── BOTTOM BAR ─────────────────────────────────────────── -->
+<div class="bottom-bar">
+  <button class="bb-btn" id="bbOperador"><span class="bb-icon">👤</span>OPERADOR</button>
+  <button class="bb-btn" id="bbOperacao"><span class="bb-icon">⚙</span>OPERAÇÃO</button>
+  <button class="bb-btn" id="bbExportar"><span class="bb-icon">📤</span>EXPORTAR</button>
+  <button class="bb-btn" id="bbImportar"><span class="bb-icon">📥</span>IMPORTAR</button>
+  <button class="bb-btn" id="bbImprimir"><span class="bb-icon">🖨</span>IMPRIMIR</button>
+</div>
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<!-- ── MODAL: LEVEL PICKER ──────────────────────────────── -->
+<div class="overlay" id="modalNivel">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title" id="nivelTitle">Nível de Qualificação</div>
+      <button class="modal-close" data-close="modalNivel">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="op-detail-box" id="nivelOpBox"></div>
+      <div class="level-picker" id="levelPicker"></div>
+      <button class="btn-sec" data-close="modalNivel">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: ADD OPERADOR ──────────────────────────────── -->
+<div class="overlay" id="modalAddOp">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title">NOVO OPERADOR</div>
+      <button class="modal-close" data-close="modalAddOp">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Matrícula</label>
+          <input class="form-control" id="opMatricula" type="text" placeholder="4066000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input class="form-control" id="opNome" type="text" placeholder="Nome">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-control" id="opTipo">
+          <option value="membro">Membro do Time</option>
+          <option value="externo">Operador de outra equipe</option>
+        </select>
+      </div>
+      <button class="btn-prim" id="salvarOpBtn">ADICIONAR</button>
+      <button class="btn-sec"  data-close="modalAddOp">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: ADD OPERAÇÃO ──────────────────────────────── -->
+<div class="overlay" id="modalAddOpr">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title">NOVA OPERAÇÃO</div>
+      <button class="modal-close" data-close="modalAddOpr">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código (F###)</label>
+          <input class="form-control" id="oprCodigo" type="text" placeholder="F241">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nr. operação</label>
+          <input class="form-control" id="oprNr" type="number" placeholder="19">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input class="form-control" id="oprDesc" type="text" placeholder="Fixação...">
+      </div>
+      <button class="btn-prim" id="salvarOprBtn">ADICIONAR</button>
+      <button class="btn-sec"  data-close="modalAddOpr">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: INFO CÉLULA ────────────────────────────────── -->
+<div class="overlay" id="modalInfo">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title">INFORMAÇÕES DA CÉLULA</div>
+      <button class="modal-close" data-close="modalInfo">✕</button>
+    </div>
+    <div class="modal-body" id="infoBody"></div>
+  </div>
+</div>
+
+<!-- ── MODAL: DETALHE ────────────────────────────────────── -->
+<div class="overlay" id="modalOpDetalhe">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title" id="opDetalheTitle">Detalhe</div>
+      <button class="modal-close" data-close="modalOpDetalhe">✕</button>
+    </div>
+    <div class="modal-body" id="opDetalheBody"></div>
+  </div>
+</div>
+
+<!-- ── MODAL: OPÇÕES DA EQUIPE ─────────────────────────────── -->
+<div class="overlay" id="modalEquipeOpts">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-hd-title" id="equipeOptsTitle">Equipe</div>
+      <button class="modal-close" data-close="modalEquipeOpts">✕</button>
+    </div>
+    <div class="modal-body" id="equipeOptsBody"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// DADOS BASE
+// ─────────────────────────────────────────────────────────
+const INFO = {
+  celula:'Fahrwerk', lider:'Operador 01 Jose C. de Sales',
+  time:'3', turno:'2º', cc:'3347', elaborado:'Fábio',
+  dataAuth:'04/05/2026'
+};
+
+const OPERACOES_BASE = [
+  {id:'OP-01',codigo:'OP-01',nr:1, desc:'Eixo Traseiro'},
+  {id:'OP-02',codigo:'OP-02',nr:2, desc:'Escapamento Secundário'},
+  {id:'OP-03',codigo:'OP-03',nr:3, desc:'Amortecedor no Eixo LE'},
+  {id:'OP-04',codigo:'OP-04',nr:4, desc:'Amortecedor no Eixo LD'},
+  {id:'OP-05',codigo:'OP-05',nr:5, desc:'Defletoras + Tubulação de Freio LE'},
+  {id:'OP-06',codigo:'OP-06',nr:6, desc:'Pega do tanque e tubulação de freio 2'},
+  {id:'OP-07',codigo:'OP-07',nr:7, desc:'Auxiliar tanque e tubulação de Freio 1'},
+  {id:'OP-08',codigo:'OP-08',nr:8, desc:'Operação 08'},
+  {id:'OP-09',codigo:'OP-09',nr:9, desc:'Operação 09'},
+  {id:'OP-10',codigo:'OP-10',nr:10,desc:'Fixação Eixo Traseiro LE'},
+  {id:'OP-11',codigo:'OP-11',nr:11,desc:'Fixação Eixo Traseiro LD'},
+  {id:'OP-12',codigo:'OP-12',nr:12,desc:'Pré-torque Torre da Suspensão e fixação Coxins'},
+  {id:'OP-13',codigo:'OP-13',nr:13,desc:'Fixação Quadro Auxiliar LE'},
+  {id:'OP-14',codigo:'OP-14',nr:14,desc:'Fixação Quadro Auxiliar LD'},
+  {id:'OP-15',codigo:'OP-15',nr:15,desc:'Fixação Tanque LE'},
+  {id:'OP-16',codigo:'OP-16',nr:16,desc:'Fixação Tanque LD'},
+  {id:'OP-17',codigo:'OP-17',nr:17,desc:'Fixação Amortecedor Traseiro LE'},
+  {id:'OP-18',codigo:'OP-18',nr:18,desc:'Fixação Amortecedor Traseiro LD'},
+];
+
+const EQUIPES_BASE = [
+  {
+    id:'sk1', nome:'Equipe 1',
+    operadores:[
+      {id:'op1', mat:'9000010',nome:'Francielly',   tipo:'membro'},
+      {id:'op2', mat:'9000011',nome:'Operador 11',    tipo:'membro'},
+      {id:'op3', mat:'9000012',nome:'Operador 12',        tipo:'membro'},
+      {id:'op4', mat:'9000013',nome:'Operador 13',        tipo:'membro'},
+      {id:'op5', mat:'9000014',nome:'Operador 14',       tipo:'membro'},
+      {id:'op6', mat:'9000015',nome:'Maykon',       tipo:'membro'},
+      {id:'op7', mat:'9000016',nome:'Operador 16',        tipo:'membro'},
+      {id:'op8', mat:'9000017',nome:'Operador 17',       tipo:'membro'},
+      {id:'op9', mat:'9000018',nome:'Operador 18',       tipo:'membro'},
+      {id:'op10',mat:'9000019',nome:'Operador 19',       tipo:'membro'},
+      {id:'op11',mat:'9000020',nome:'Operador 20',        tipo:'membro'},
+      {id:'op12',mat:'9000021',nome:'Bruno F.',     tipo:'membro'},
+      {id:'op13',mat:'4066595',nome:'Thiago Migoto',tipo:'externo'},
+      {id:'op14',mat:'4066384',nome:'Luander',      tipo:'externo'},
+    ]
+  },
+  {
+    id:'sk2', nome:'Equipe 2',
+    operadores:[
+      {id:'op21',mat:'9000001',nome:'Operador 01',      tipo:'membro'},
+      {id:'op22',mat:'9000002',nome:'Helio',        tipo:'membro'},
+      {id:'op23',mat:'9000003',nome:'Pedro H.',     tipo:'membro'},
+      {id:'op24',mat:'9000004',nome:'Bruno César',  tipo:'membro'},
+      {id:'op25',mat:'9000006',nome:'Operador 06',          tipo:'membro'},
+      {id:'op26',mat:'9000007',nome:'Operador 07',         tipo:'membro'},
+      {id:'op27',mat:'4066594',nome:'Thiago V.',    tipo:'membro'},
+      {id:'op28',mat:'9000005',nome:'Operador 05',  tipo:'membro'},
+      {id:'op29',mat:'9000008',nome:'Operador 08',  tipo:'membro'},
+      {id:'op30',mat:'9000009',nome:'Operador 09',     tipo:'membro'},
+      {id:'op31',mat:'4066595',nome:'Thiago Migoto',tipo:'externo'},
+      {id:'op32',mat:'4066384',nome:'Luander',      tipo:'externo'},
+    ]
+  }
+];
+
+const LEVEL_COLORS = ['var(--l0)','var(--l1)','var(--l2)','var(--l3)','var(--l4)','var(--l5)'];
+const LEVEL_LABELS = ['Não iniciado','Em treinamento','Executa c/ supervisão','Executa sozinho','Qualificado','Multiplica'];
+const LEVEL_SHORT  = ['—','1','2','3','4','★'];
+
+// ─────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────
+let state   = {equipes:EQUIPES_BASE, operacoes:OPERACOES_BASE, matriz:{}, activeSk:'sk1'};
+let history = [];   // {id, ts, skNome, opNome, oprCodigo, oprDesc, oldLvl, newLvl}
+let currentNivelCell = null;
+let currentView      = 'matrix';
+
+// ─────────────────────────────────────────────────────────
+// INDEXEDDB
+// ─────────────────────────────────────────────────────────
+let db;
+function initDB(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open('fahrwerk_poliv2',1);
+    r.onupgradeneeded = e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains('data')) d.createObjectStore('data',{keyPath:'key'});
+    };
+    r.onsuccess = e=>{ db=e.target.result; res(); };
+    r.onerror   = e=>rej(e.target.error);
+  });
+}
+const dbGet = k=>new Promise((res,rej)=>{ if(!db){res(undefined);return;} const r=db.transaction('data','readonly').objectStore('data').get(k); r.onsuccess=()=>res(r.result?.value); r.onerror=()=>rej(r.error); });
+const dbPut = (k,v)=>new Promise((res,rej)=>{ if(!db){res();return;} const r=db.transaction('data','readwrite').objectStore('data').put({key:k,value:v}); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });
+
+async function salvarTudo(){ await dbPut('state',state); await dbPut('history',history); }
+async function loadState(){
+  const s=await dbGet('state');
+  if(s){
+    // migração 1: skillits -> equipes (rename de chave)
+    if(s.skillits && !s.equipes) s.equipes = s.skillits;
+    // migração 2: renomear "Skillit N" -> "Equipe N" nos nomes salvos
+    if(s.equipes) s.equipes.forEach(e=>{ e.nome = e.nome.replace(/Skillit/gi,'Equipe'); });
+    state=s;
+  }
+  // garantia: se equipes ainda estiver ausente, usa base
+  if(!state.equipes || !Array.isArray(state.equipes)) state.equipes = EQUIPES_BASE;
+  const h=await dbGet('history'); if(h) history=h;
+}
+
+// ─────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────
+const uid     = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const closeM  = id=>document.getElementById(id).classList.remove('open');
+const getLevel= (skId,opId,oprId)=>state.matriz[`${skId}_${opId}_${oprId}`]||0;
+const getSk   = ()=>state.equipes.find(s=>s.id===state.activeSk);
+
+function levelSVG(level){
+  const S=32,H=S/2;
+  const c=LEVEL_COLORS[level];
+  const bg=level===0?'#f1f3f7':'white';
+  const Q=[`M0,${H} H${H} V${S} H0 Z`,`M${H},${H} H${S} V${S} H${H} Z`,`M0,0 H${H} V${H} H0 Z`,`M${H},0 H${S} V${H} H${H} Z`];
+  let paths='';
+  if(level===5){ paths=`<rect width="${S}" height="${S}" fill="${c}"/><text x="${H}" y="${H+5}" text-anchor="middle" fill="white" font-size="14" font-weight="700">★</text>`; }
+  else if(level>0){ for(let i=0;i<level&&i<4;i++) paths+=`<path d="${Q[i]}" fill="${c}"/>`; }
+  const lines=level>0&&level<5?`<line x1="${H}" y1="0" x2="${H}" y2="${S}" stroke="rgba(255,255,255,0.7)" stroke-width="1"/><line x1="0" y1="${H}" x2="${S}" y2="${H}" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>`:'';
+  return `<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" class="level-svg"><rect width="${S}" height="${S}" fill="${bg}" rx="3"/>${paths}${lines}<rect width="${S}" height="${S}" fill="none" stroke="${level>0?'rgba(0,0,0,0.08)':'var(--border)'}" stroke-width="1" rx="3"/></svg>`;
+}
+
+// ─────────────────────────────────────────────────────────
+// VIEW SWITCHER
+// ─────────────────────────────────────────────────────────
+function setView(view){
+  currentView=view;
+  document.getElementById('viewMatrix').style.display  = view==='matrix'  ? '':'none';
+  document.getElementById('viewAI').style.display      = view==='ai'      ? '':'none';
+  document.getElementById('viewHistory').style.display = view==='history' ? '':'none';
+  document.querySelectorAll('.vs-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  if(view==='history') renderHistory();
+}
+
+document.querySelector('.view-switcher').addEventListener('click', e=>{
+  const btn=e.target.closest('[data-view]'); if(btn) setView(btn.dataset.view);
+});
+
+// ─────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────
+function renderTabs(){
+  const bar=document.getElementById('tabsBar');
+  bar.innerHTML=state.equipes.map(sk=>{
+    const ativa=sk.id===state.activeSk;
+    return `<div class="tab${ativa?' active':''}" data-skid="${sk.id}" data-ativa="${ativa}">${sk.nome}${ativa?' <span style="opacity:0.6;font-size:11px;">▾</span>':''}</div>`;
+  }).join('')+`<div class="tab" id="tabAddEquipe">＋ Equipe</div>`;
+  bar.querySelectorAll('[data-skid]').forEach(el=>el.addEventListener('click',()=>{
+    if(el.dataset.ativa==='true') abrirOpcoesEquipe(el.dataset.skid);
+    else { state.activeSk=el.dataset.skid; fullRender(); }
+  }));
+  document.getElementById('tabAddEquipe').addEventListener('click', adicionarEquipe);
+}
+
+function renderStats(){
+  const sk=getSk(); if(!sk) return;
+  const ops=state.operacoes;
+  const total=sk.operadores.length*ops.length;
+  const preenchi=Object.keys(state.matriz).filter(k=>k.startsWith(sk.id+'_')&&state.matriz[k]>0).length;
+  const qualif  =Object.keys(state.matriz).filter(k=>k.startsWith(sk.id+'_')&&state.matriz[k]>=4).length;
+  const cob=total?Math.round(preenchi/total*100):0;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-box"><div class="stat-n">${sk.operadores.length}</div><div class="stat-lbl">Operadores</div></div>
+    <div class="stat-box"><div class="stat-n">${ops.length}</div><div class="stat-lbl">Operações</div></div>
+    <div class="stat-box"><div class="stat-n">${cob}%</div><div class="stat-lbl">Cobertura</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--ok)">${qualif}</div><div class="stat-lbl">Qualific.</div></div>`;
+}
+
+function renderIndicators(){
+  const sk=getSk(); if(!sk) return;
+  const ops=state.operacoes;
+  const semCob=ops.filter(o=>!sk.operadores.some(op=>getLevel(sk.id,op.id,o.id)>=3));
+  const alerta=ops.filter(o=>sk.operadores.filter(op=>getLevel(sk.id,op.id,o.id)>=3).length===1);
+  const el=document.getElementById('indicatorRow');
+  let html='';
+  if(semCob.length) html+=`<div class="ind-chip danger" data-tipo="sem">⚠ ${semCob.length} op. sem cobertura</div>`;
+  if(alerta.length) html+=`<div class="ind-chip warn"   data-tipo="unico">⚡ ${alerta.length} op. com 1 qualificado</div>`;
+  if(!semCob.length&&!alerta.length) html=`<div class="ind-chip ok">✔ Cobertura OK em todas as operações</div>`;
+  el.innerHTML=html;
+  el.querySelectorAll('[data-tipo]').forEach(c=>c.addEventListener('click',()=>abrirIndicador(c.dataset.tipo)));
+}
+
+function renderMatrix(){
+  const sk=getSk(); if(!sk) return;
+  const ops=state.operacoes;
+  let html=`<table class="matrix-table"><thead><tr>
+    <th class="corner-cell"><div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:0.5px;">OPERADOR</div><div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px;">${ops.length} operações</div></th>`;
+  ops.forEach(o=>{ html+=`<th class="op-header-cell" data-oprid="${o.id}"><div class="op-header-inner"><span class="op-code">${o.codigo}</span><span class="op-desc">${o.desc}</span></div></th>`; });
+  html+='</tr></thead><tbody>';
+  const membros =sk.operadores.filter(o=>o.tipo==='membro');
+  const externos=sk.operadores.filter(o=>o.tipo==='externo');
+  if(membros.length){
+    html+=`<tr class="group-row"><td colspan="${ops.length+1}">👥 Membros do Time (${membros.length})</td></tr>`;
+    membros.forEach(op=>{ html+=rowHTML(op,sk.id,ops); });
+  }
+  if(externos.length){
+    html+=`<tr class="group-row"><td colspan="${ops.length+1}">🔄 Outras Equipes (${externos.length})</td></tr>`;
+    externos.forEach(op=>{ html+=rowHTML(op,sk.id,ops); });
+  }
+  html+='</tbody></table>';
+  const sec=document.getElementById('matrixSection');
+  sec.innerHTML=html;
+  sec.querySelectorAll('[data-oprid]').forEach(el=>el.addEventListener('click',()=>verOperacao(el.dataset.oprid)));
+  sec.querySelectorAll('[data-cell]').forEach(el=>el.addEventListener('click',()=>{
+    const [sk,op,opr]=el.dataset.cell.split('|'); abrirNivel(sk,op,opr);
+  }));
+  sec.querySelectorAll('[data-opname]').forEach(el=>el.addEventListener('click',()=>verOperador(el.dataset.opname,el.dataset.skid)));
+  // Re-apply search filter
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  if(q) document.querySelectorAll('[data-oprow]').forEach(row=>{
+    row.classList.toggle('tr-hidden', !row.dataset.oprow.includes(q));
+  });
+}
+
+function rowHTML(op, skId, ops){
+  let row=`<tr data-oprow="${op.nome.toLowerCase()}">
+    <td class="name-cell" data-opname="${op.id}" data-skid="${skId}">
+      <div class="name-cell-inner"><div>
+        <div class="nome">${op.nome}${op.tipo==='externo'?'<span class="ext-badge" style="margin-left:5px;">EXT</span>':''}</div>
+        <div class="matricula">${op.mat}</div>
+      </div></div>
+    </td>`;
+  ops.forEach(o=>{ row+=`<td class="skill-cell" data-cell="${skId}|${op.id}|${o.id}">${levelSVG(getLevel(skId,op.id,o.id))}</td>`; });
+  return row+'</tr>';
+}
+
+function renderHistory(){
+  const el=document.getElementById('historyContent');
+  if(!history.length){
+    el.innerHTML=`<div class="hist-empty"><div class="hist-empty-icon">📋</div><div style="font-size:14px;font-weight:600;margin-bottom:6px;">Nenhuma alteração registrada</div><div style="font-size:12px;">Cada vez que você mudar um nível na matriz, o registro aparece aqui.</div></div>`;
+    return;
+  }
+  const items=[...history].reverse().slice(0,150);
+  el.innerHTML=items.map(h=>{
+    const up=h.newLvl>h.oldLvl;
+    const arrow=h.newLvl>h.oldLvl?'↑':h.newLvl<h.oldLvl?'↓':'=';
+    const color=up?'var(--ok)':'var(--danger)';
+    return `<div class="hist-item">
+      <div class="hist-arrow" style="color:${color}">${arrow}</div>
+      <div class="hist-body">
+        <div class="hist-op">${h.opNome} · ${h.oprCodigo}</div>
+        <div class="hist-sub">${h.oprDesc}<br>Nível <strong>${LEVEL_SHORT[h.oldLvl]}</strong> → <strong style="color:${color}">${LEVEL_SHORT[h.newLvl]}</strong> · ${LEVEL_LABELS[h.newLvl]}</div>
+        <div class="hist-ts">${h.ts} · ${h.skNome}</div>
+      </div>
+    </div>`;
+  }).join('')+`<button class="btn-danger-sm" id="btnLimparHist">🗑 LIMPAR HISTÓRICO (${history.length} registros)</button>`;
+  document.getElementById('btnLimparHist').addEventListener('click', limparHistorico);
+}
+
+function fullRender(){
+  renderTabs(); renderStats(); renderIndicators(); renderMatrix();
+}
+
+// ─────────────────────────────────────────────────────────
+// LEVEL PICKER
+// ─────────────────────────────────────────────────────────
+function abrirNivel(skId, opId, oprId){
+  const sk=state.equipes.find(s=>s.id===skId);
+  const op=sk?.operadores.find(x=>x.id===opId);
+  const opr=state.operacoes.find(x=>x.id===oprId);
+  if(!op||!opr) return;
+  currentNivelCell={skId,opId,oprId};
+  const cur=getLevel(skId,opId,oprId);
+  document.getElementById('nivelTitle').textContent=op.nome+' · '+opr.codigo;
+  document.getElementById('nivelOpBox').innerHTML=`<div class="op-detail-code">${opr.codigo} — Op. ${opr.nr}</div><div class="op-detail-desc">${opr.desc}</div>`;
+  const picker=document.getElementById('levelPicker');
+  picker.innerHTML='';
+  [0,1,2,3,4,5].forEach(l=>{
+    const d=document.createElement('div');
+    d.className='level-opt'+(l===cur?' selected':'');
+    if(l===cur) d.style.cssText=`border-color:${LEVEL_COLORS[l]};background:${LEVEL_COLORS[l]}22;`;
+    d.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:6px;">${levelSVG(l)}</div><div class="level-opt-n" style="color:${l>0?LEVEL_COLORS[l]:'#9ca3af'}">${LEVEL_SHORT[l]}</div><div class="level-opt-lbl">${LEVEL_LABELS[l]}</div>`;
+    d.addEventListener('click',()=>selecionarNivel(l));
+    picker.appendChild(d);
+  });
+  document.getElementById('modalNivel').classList.add('open');
+}
+
+async function selecionarNivel(l){
+  if(!currentNivelCell) return;
+  const {skId,opId,oprId}=currentNivelCell;
+  const key=`${skId}_${opId}_${oprId}`;
+  const oldLvl=state.matriz[key]||0;
+  if(l===0) delete state.matriz[key]; else state.matriz[key]=l;
+
+  if(oldLvl!==l){
+    const sk=state.equipes.find(s=>s.id===skId);
+    const op=sk?.operadores.find(o=>o.id===opId);
+    const opr=state.operacoes.find(o=>o.id===oprId);
+    if(op&&opr){
+      history.push({
+        id:uid(),
+        ts:new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}),
+        skNome:sk.nome, opNome:op.nome,
+        oprCodigo:opr.codigo, oprDesc:opr.desc,
+        oldLvl, newLvl:l
+      });
+      if(history.length>500) history=history.slice(-500);
+    }
+  }
+  try{await salvarTudo();}catch(e){console.warn("[poliv] save error:",e);}
+  closeM('modalNivel');
+  renderStats(); renderIndicators();
+  const cell=document.querySelector(`[data-cell="${skId}|${opId}|${oprId}"]`);
+  if(cell) cell.innerHTML=levelSVG(l);
+}
+
+// ─────────────────────────────────────────────────────────
+// ADD OPERADOR / OPERAÇÃO / EQUIPE
+// ─────────────────────────────────────────────────────────
+function abrirAddOperador(){
+  document.getElementById('opMatricula').value='';
+  document.getElementById('opNome').value='';
+  document.getElementById('opTipo').value='membro';
+  document.getElementById('modalAddOp').classList.add('open');
+}
+async function salvarOperador(){
+  const mat=document.getElementById('opMatricula').value.trim();
+  const nome=document.getElementById('opNome').value.trim();
+  const tipo=document.getElementById('opTipo').value;
+  if(!nome){ alert('Informe o nome.'); return; }
+  const sk=getSk(); if(!sk) return;
+  sk.operadores.push({id:uid(),mat,nome,tipo});
+  await salvarTudo(); closeM('modalAddOp'); fullRender();
+}
+
+function abrirAddOperacao(){
+  document.getElementById('oprCodigo').value='';
+  document.getElementById('oprNr').value='';
+  document.getElementById('oprDesc').value='';
+  document.getElementById('modalAddOpr').classList.add('open');
+}
+async function salvarOperacao(){
+  const codigo=document.getElementById('oprCodigo').value.trim();
+  const desc  =document.getElementById('oprDesc').value.trim();
+  const nr    =parseInt(document.getElementById('oprNr').value)||state.operacoes.length+1;
+  if(!codigo||!desc){ alert('Preencha código e descrição.'); return; }
+  state.operacoes.push({id:codigo,codigo,nr,desc});
+  state.operacoes.sort((a,b)=>a.nr-b.nr);
+  await salvarTudo(); closeM('modalAddOpr'); fullRender();
+}
+
+async function adicionarEquipe(){
+  const nome=prompt('Nome da nova Equipe:'); if(!nome) return;
+  const id='sk'+uid();
+  state.equipes.push({id,nome,operadores:[]});
+  state.activeSk=id;
+  await salvarTudo(); fullRender();
+}
+
+function abrirOpcoesEquipe(skId){
+  const sk=state.equipes.find(s=>s.id===skId); if(!sk) return;
+  document.getElementById('equipeOptsTitle').textContent=sk.nome;
+  document.getElementById('equipeOptsBody').innerHTML=`
+    <button class="btn-sec" id="_optAddOp"  style="margin-top:0">👤 Adicionar Operador</button>
+    <button class="btn-sec" id="_optRenomear">✏️ Renomear Equipe</button>
+    <button class="btn-danger" id="_optExcluir">🗑 Excluir Equipe</button>
+    <button class="btn-sec" id="_optFechar">CANCELAR</button>`;
+  document.getElementById('modalEquipeOpts').classList.add('open');
+  document.getElementById('_optAddOp').addEventListener('click',()=>{ closeM('modalEquipeOpts'); abrirAddOperador(); });
+  document.getElementById('_optRenomear').addEventListener('click',()=>renomearEquipe(skId));
+  document.getElementById('_optExcluir').addEventListener('click',()=>excluirEquipe(skId));
+  document.getElementById('_optFechar').addEventListener('click',()=>closeM('modalEquipeOpts'));
+}
+
+async function renomearEquipe(skId){
+  const sk=state.equipes.find(s=>s.id===skId); if(!sk) return;
+  const novo=prompt('Novo nome da equipe:',sk.nome); if(!novo||novo===sk.nome) return;
+  sk.nome=novo; await salvarTudo(); closeM('modalEquipeOpts'); fullRender();
+}
+
+async function excluirEquipe(skId){
+  if(state.equipes.length<=1){ alert('Não é possível excluir a única equipe.'); return; }
+  const sk=state.equipes.find(s=>s.id===skId); if(!sk) return;
+  if(!confirm(`Excluir "${sk.nome}" e todos os seus dados?\n\nEsta ação não pode ser desfeita.`)) return;
+  state.equipes=state.equipes.filter(s=>s.id!==skId);
+  Object.keys(state.matriz).forEach(k=>{ if(k.startsWith(skId+'_')) delete state.matriz[k]; });
+  state.activeSk=state.equipes[0].id;
+  await salvarTudo(); closeM('modalEquipeOpts'); fullRender();
+}
+
+// ─────────────────────────────────────────────────────────
+// VER OPERAÇÃO
+// ─────────────────────────────────────────────────────────
+function verOperacao(oprId){
+  const opr=state.operacoes.find(x=>x.id===oprId); if(!opr) return;
+  const sk=getSk(); if(!sk) return;
+  const qualifs=sk.operadores.map(op=>({op,lvl:getLevel(sk.id,op.id,oprId)})).filter(x=>x.lvl>0).sort((a,b)=>b.lvl-a.lvl);
+  const sem=sk.operadores.filter(op=>getLevel(sk.id,op.id,oprId)===0);
+  const cov=sk.operadores.length?Math.round(qualifs.length/sk.operadores.length*100):0;
+  document.getElementById('opDetalheTitle').textContent=opr.codigo;
+  const body=document.getElementById('opDetalheBody');
+  body.innerHTML=`
+    <div class="op-detail-box"><div class="op-detail-code">${opr.codigo}</div><div class="op-detail-desc">${opr.desc}</div><div class="op-detail-nr">Operação nº ${opr.nr}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--muted);">Cobertura</span><strong>${cov}% (${qualifs.length}/${sk.operadores.length})</strong></div>
+    <div class="cov-bar"><div class="cov-fill" style="width:${cov}%"></div></div>
+    <div style="margin-top:14px;font-size:11px;font-weight:700;letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Qualificados</div>
+    ${qualifs.map(({op,lvl})=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">${levelSVG(lvl)}<div><div style="font-size:14px;font-weight:600;">${op.nome}</div><div style="font-size:11px;color:var(--muted);">${op.mat} · ${LEVEL_LABELS[lvl]}</div></div></div>`).join('')}
+    ${sem.length?`<div style="margin-top:12px;font-size:11px;font-weight:700;letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Não iniciado (${sem.length})</div>${sem.map(op=>`<div style="font-size:13px;color:var(--muted);padding:4px 0;">${op.nome} · <span style="font-family:monospace;font-size:11px;">${op.mat}</span></div>`).join('')}`:''}
+    <button class="btn-danger" id="_excluirOpr">🗑 EXCLUIR OPERAÇÃO</button>
+    <button class="btn-sec"    id="_fecharDet">FECHAR</button>`;
+  document.getElementById('modalOpDetalhe').classList.add('open');
+  document.getElementById('_excluirOpr').addEventListener('click', async()=>{
+    if(!confirm('Excluir esta operação de todas as matrizes?')) return;
+    state.operacoes=state.operacoes.filter(o=>o.id!==oprId);
+    Object.keys(state.matriz).forEach(k=>{ if(k.endsWith('_'+oprId)) delete state.matriz[k]; });
+    await salvarTudo(); closeM('modalOpDetalhe'); fullRender();
+  });
+  document.getElementById('_fecharDet').addEventListener('click',()=>closeM('modalOpDetalhe'));
+}
+
+// ─────────────────────────────────────────────────────────
+// VER OPERADOR
+// ─────────────────────────────────────────────────────────
+function verOperador(opId, skId){
+  const sk=state.equipes.find(s=>s.id===skId); if(!sk) return;
+  const op=sk.operadores.find(o=>o.id===opId);  if(!op) return;
+  const qualifs=state.operacoes.map(o=>({o,lvl:getLevel(skId,opId,o.id)})).filter(x=>x.lvl>0).sort((a,b)=>b.lvl-a.lvl);
+  const cov=state.operacoes.length?Math.round(qualifs.length/state.operacoes.length*100):0;
+  document.getElementById('opDetalheTitle').textContent=op.nome;
+  const body=document.getElementById('opDetalheBody');
+  body.innerHTML=`
+    <div class="op-detail-box"><div class="op-detail-code">${op.mat}</div><div class="op-detail-desc">${op.nome}</div><div class="op-detail-nr">${sk.nome} · ${op.tipo==='externo'?'Outra equipe':'Membro do time'}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--muted);">Operações dominadas</span><strong>${cov}% (${qualifs.length}/${state.operacoes.length})</strong></div>
+    <div class="cov-bar"><div class="cov-fill" style="width:${cov}%"></div></div>
+    <div style="margin-top:14px;font-size:11px;font-weight:700;letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Operações</div>
+    ${qualifs.map(({o,lvl})=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">${levelSVG(lvl)}<div><div style="font-size:14px;font-weight:600;">${o.codigo}</div><div style="font-size:11px;color:var(--muted);">${o.desc}</div></div></div>`).join('')}
+    <button class="btn-danger" id="_excluirOp">🗑 REMOVER OPERADOR</button>
+    <button class="btn-sec"    id="_fecharDet2">FECHAR</button>`;
+  document.getElementById('modalOpDetalhe').classList.add('open');
+  document.getElementById('_excluirOp').addEventListener('click', async()=>{
+    if(!confirm('Remover este operador?')) return;
+    sk.operadores=sk.operadores.filter(o=>o.id!==opId);
+    Object.keys(state.matriz).forEach(k=>{ if(k.includes(`${skId}_${opId}_`)) delete state.matriz[k]; });
+    await salvarTudo(); closeM('modalOpDetalhe'); fullRender();
+  });
+  document.getElementById('_fecharDet2').addEventListener('click',()=>closeM('modalOpDetalhe'));
+}
+
+// ─────────────────────────────────────────────────────────
+// INDICADOR DETAIL
+// ─────────────────────────────────────────────────────────
+function abrirIndicador(tipo){
+  const sk=getSk(); if(!sk) return;
+  let titulo, itens;
+  if(tipo==='sem'){
+    titulo='Operações sem cobertura';
+    itens=state.operacoes.filter(o=>!sk.operadores.some(op=>getLevel(sk.id,op.id,o.id)>=3));
+  } else {
+    titulo='Operações com 1 único qualificado';
+    itens=state.operacoes.filter(o=>sk.operadores.filter(op=>getLevel(sk.id,op.id,o.id)>=3).length===1);
+  }
+  document.getElementById('opDetalheTitle').textContent=titulo;
+  const body=document.getElementById('opDetalheBody');
+  body.innerHTML=(itens.length?itens.map(o=>`
+    <div data-oprid="${o.id}" style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="font-family:monospace;font-size:11px;color:var(--accent2);">${o.codigo}</div>
+      <div style="font-size:14px;font-weight:600;margin-top:2px;">${o.desc}</div>
+    </div>`).join(''):'<div style="color:var(--muted);padding:16px 0;text-align:center;">Nenhuma ocorrência</div>')+
+    `<button class="btn-sec" id="_fecharInd" style="margin-top:12px;">FECHAR</button>`;
+  document.getElementById('modalOpDetalhe').classList.add('open');
+  body.querySelectorAll('[data-oprid]').forEach(el=>el.addEventListener('click',()=>{ closeM('modalOpDetalhe'); verOperacao(el.dataset.oprid); }));
+  document.getElementById('_fecharInd').addEventListener('click',()=>closeM('modalOpDetalhe'));
+}
+
+// ─────────────────────────────────────────────────────────
+// INFO CÉLULA
+// ─────────────────────────────────────────────────────────
+function abrirInfo(){
+  document.getElementById('infoBody').innerHTML=`
+    <div class="info-grid">
+      <div class="info-box" style="grid-column:1/-1;"><div class="info-box-label">Líder de Célula</div><div class="info-box-value">${INFO.lider}</div></div>
+      <div class="info-box"><div class="info-box-label">Célula</div><div class="info-box-value">${INFO.celula}</div></div>
+      <div class="info-box"><div class="info-box-label">Time</div><div class="info-box-value">${INFO.time}</div></div>
+      <div class="info-box"><div class="info-box-label">Turno</div><div class="info-box-value">${INFO.turno}</div></div>
+      <div class="info-box"><div class="info-box-label">C. Custo</div><div class="info-box-value">${INFO.cc}</div></div>
+      <div class="info-box"><div class="info-box-label">Elaborado por</div><div class="info-box-value">${INFO.elaborado}</div></div>
+      <div class="info-box"><div class="info-box-label">Data autorização</div><div class="info-box-value">${INFO.dataAuth}</div></div>
+    </div>
+    <hr class="sep">
+    <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+      <strong>${state.equipes.length}</strong> Equipes · 
+      <strong>${state.operacoes.length}</strong> Operações · 
+      <strong>${state.equipes.reduce((a,s)=>a+s.operadores.length,0)}</strong> Operadores · 
+      <strong>${history.length}</strong> registros no histórico
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;">Polivalência Fahrwerk v2.0 · com Análise IA</div>
+    <button class="btn-sec" id="_fecharInfo">FECHAR</button>`;
+  document.getElementById('modalInfo').classList.add('open');
+  document.getElementById('_fecharInfo').addEventListener('click',()=>closeM('modalInfo'));
+}
+
+// ─────────────────────────────────────────────────────────
+// EXPORT / IMPORT
+// ─────────────────────────────────────────────────────────
+function exportarJSON(){
+  const d=JSON.stringify({app:'Fahrwerk Polivalência',info:INFO,versao:'2.0',exportado:new Date().toISOString(),...state,history},null,2);
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([d],{type:'application/json'})),
+    download:`polivalencia-${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.json`
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('importFile').addEventListener('change', async function(){
+  const file=this.files[0]; if(!file) return;
+  try {
+    const data=JSON.parse(await file.text());
+    if(!data.equipes||!data.operacoes){ alert('Arquivo inválido — não é um backup de Polivalência.'); return; }
+    const dataExport=data.exportado?new Date(data.exportado).toLocaleDateString('pt-BR'):'desconhecida';
+    if(!confirm(`Importar backup de ${dataExport}?\n\nIsso substituirá todos os dados atuais desta sessão.`)) return;
+    state={equipes:data.equipes, operacoes:data.operacoes, matriz:data.matriz||{}, activeSk:data.activeSk||data.equipes[0]?.id||'sk1'};
+    if(data.history) history=data.history;
+    await salvarTudo();
+    fullRender();
+    alert('✅ Dados importados com sucesso!');
+  } catch(e){ alert('Erro ao importar: '+e.message); }
+  this.value='';
+});
+
+// ─────────────────────────────────────────────────────────
+// BUSCA
+// ─────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', function(){
+  const q=this.value.trim().toLowerCase();
+  document.querySelectorAll('[data-oprow]').forEach(row=>{
+    row.classList.toggle('tr-hidden', q.length>0 && !row.dataset.oprow.includes(q));
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+// LIMPAR HISTÓRICO
+// ─────────────────────────────────────────────────────────
+async function limparHistorico(){
+  if(!confirm(`Limpar ${history.length} registros do histórico?`)) return;
+  history=[]; await salvarTudo(); renderHistory();
+}
+
+// ─────────────────────────────────────────────────────────
+// AI ANALYSIS
+// ─────────────────────────────────────────────────────────
+document.getElementById('btnGerarAnalise').addEventListener('click', gerarAnalise);
+
+async function gerarAnalise(){
+  const btn=document.getElementById('btnGerarAnalise');
+  const result=document.getElementById('aiResult');
+  btn.disabled=true; btn.innerHTML='⏳ ANALISANDO...';
+  result.innerHTML=`<div class="ai-loading"><div class="ai-loading-spinner"></div><div style="font-size:14px;font-weight:600;">Analisando sua matriz...</div><div style="font-size:12px;margin-top:4px;">Aguarde alguns segundos.</div></div>`;
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:buildPrompt()}]
+      })
+    });
+    const data=await resp.json();
+    const txt=data.content?.map(i=>i.text||'').join('');
+    const clean=txt.replace(/```json|```/g,'').trim();
+    renderAIResult(JSON.parse(clean));
+  } catch(e){
+    result.innerHTML=`<div class="ai-error">❌ Erro: ${e.message}<br><br>Verifique a conexão e tente novamente.</div>`;
+  }
+  btn.disabled=false; btn.innerHTML='🔄 ATUALIZAR ANÁLISE';
+}
+
+function buildPrompt(){
+  const skData=state.equipes.map(sk=>{
+    const semCob=state.operacoes.filter(o=>!sk.operadores.some(op=>getLevel(sk.id,op.id,o.id)>=3)).map(o=>`${o.codigo}(${o.desc})`);
+    const so1   =state.operacoes.filter(o=>sk.operadores.filter(op=>getLevel(sk.id,op.id,o.id)>=3).length===1).map(o=>`${o.codigo}(${o.desc})`);
+    const rank  =sk.operadores.map(op=>({nome:op.nome,n:state.operacoes.filter(o=>getLevel(sk.id,op.id,o.id)>=3).length})).sort((a,b)=>b.n-a.n).slice(0,6);
+    return `\n${sk.nome}:\n- Sem nenhum qualificado: ${semCob.length?semCob.join('; '):'Nenhuma ✔'}\n- Com apenas 1 qualificado: ${so1.length?so1.join('; '):'Nenhuma ✔'}\n- Versatilidade top 6: ${rank.map(r=>`${r.nome}(${r.n}/${state.operacoes.length})`).join(', ')}`;
+  }).join('');
+  return `Você é especialista em gestão de qualidade automotiva da Volkswagen. Analise a matriz de polivalência do setor Fahrwerk (chassi/suspensão), turno 2, time 3. Responda SOMENTE com JSON válido, sem texto antes ou depois, sem markdown.
+
+DADOS:${skData}
+
+JSON esperado:
+{"risco_geral":"ALTO|MEDIO|BAIXO","resumo":"2-3 frases sobre estado atual","operacoes_criticas":[{"codigo":"","desc":"","motivo":""}],"plano_treinamento":[{"prioridade":1,"operador":"","operacao":"","justificativa":""}],"operadores_destaque":[{"nome":"","motivo":""}],"recomendacao_monitor":"ação prática concreta para esta semana"}`;
+}
+
+function renderAIResult(a){
+  const rl={'ALTO':'🔴 RISCO ALTO','MEDIO':'🟡 RISCO MÉDIO','BAIXO':'🟢 RISCO BAIXO'};
+  document.getElementById('aiResult').innerHTML=`
+
+    <div class="ai-card">
+      <div class="ai-card-hd">
+        <span class="ai-card-icon">🎯</span>
+        <span class="ai-card-title">Avaliação Geral</span>
+        <div style="flex:1"></div>
+        <span class="risk-badge risk-${a.risco_geral}">${rl[a.risco_geral]||a.risco_geral}</span>
+      </div>
+      <div class="ai-card-body" style="font-size:13px;line-height:1.75;color:var(--text);">${a.resumo}</div>
+    </div>
+
+    ${a.operacoes_criticas?.length?`
+    <div class="ai-card">
+      <div class="ai-card-hd">
+        <span class="ai-card-icon">⚠️</span>
+        <span class="ai-card-title">Operações em Risco (${a.operacoes_criticas.length})</span>
+      </div>
+      <div class="ai-card-body">
+        ${a.operacoes_criticas.map(o=>`
+          <div class="ai-item">
+            <div class="ai-item-content">
+              <div class="ai-item-title"><span class="ai-op-code">${o.codigo}</span> &nbsp;${o.desc||''}</div>
+              <div class="ai-item-sub">${o.motivo}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`:''}
+
+    ${a.plano_treinamento?.length?`
+    <div class="ai-card">
+      <div class="ai-card-hd">
+        <span class="ai-card-icon">📚</span>
+        <span class="ai-card-title">Plano de Treinamento Prioritário</span>
+      </div>
+      <div class="ai-card-body">
+        ${a.plano_treinamento.map(t=>`
+          <div class="ai-item">
+            <div class="ai-prio">${t.prioridade}</div>
+            <div class="ai-item-content">
+              <div class="ai-item-title">${t.operador} → ${t.operacao}</div>
+              <div class="ai-item-sub">${t.justificativa}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`:''}
+
+    ${a.operadores_destaque?.length?`
+    <div class="ai-card">
+      <div class="ai-card-hd">
+        <span class="ai-card-icon">⭐</span>
+        <span class="ai-card-title">Operadores Destaque</span>
+      </div>
+      <div class="ai-card-body">
+        ${a.operadores_destaque.map(o=>`
+          <div class="ai-item">
+            <div class="ai-item-content">
+              <div class="ai-item-title">👤 ${o.nome}</div>
+              <div class="ai-item-sub">${o.motivo}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="ai-rec-card">
+      <div class="ai-card-hd">
+        <span class="ai-card-icon">💼</span>
+        <span class="ai-card-title">Recomendação para o Monitor</span>
+      </div>
+      <div class="ai-card-body" style="font-size:13px;line-height:1.75;">${a.recomendacao_monitor}</div>
+    </div>
+
+    <div style="text-align:center;font-size:10px;color:var(--muted);padding:6px 0 2px;">
+      Gerado por IA · ${new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────
+// EVENT LISTENERS GLOBAIS
+// ─────────────────────────────────────────────────────────
+document.getElementById('btnInfo').addEventListener('click', abrirInfo);
+document.getElementById('bbOperador').addEventListener('click', abrirAddOperador);
+document.getElementById('bbOperacao').addEventListener('click', abrirAddOperacao);
+document.getElementById('bbExportar').addEventListener('click', exportarJSON);
+document.getElementById('bbImportar').addEventListener('click', ()=>document.getElementById('importFile').click());
+document.getElementById('bbImprimir').addEventListener('click', ()=>window.print());
+document.getElementById('salvarOpBtn').addEventListener('click', salvarOperador);
+document.getElementById('salvarOprBtn').addEventListener('click', salvarOperacao);
+
+// Fechar modal por data-close
+document.addEventListener('click', e=>{
+  const btn=e.target.closest('[data-close]');
+  if(btn) closeM(btn.dataset.close);
+});
+// Fechar modal clicando no overlay
+document.querySelectorAll('.overlay').forEach(el=>{
+  el.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+});
+
+// ─────────────────────────────────────────────────────────
+// STARTUP
+// ─────────────────────────────────────────────────────────
+(async()=>{
+  document.getElementById('matrixSection').innerHTML=`<div style="text-align:center;padding:60px 24px;color:var(--muted);"><div style="font-size:40px;margin-bottom:12px;">⚙️</div><div style="font-size:15px;font-weight:600;">Carregando...</div></div>`;
+  try { await initDB(); await loadState(); } catch(e){ console.warn('DB error — usando dados padrão'); }
+  try { fullRender(); } catch(e){ console.error('Render error:',e); document.getElementById('matrixSection').innerHTML=`<div style="padding:24px;color:#dc2626;text-align:center;"><strong>Erro ao carregar.</strong><br><br><small>${e.message}</small><br><br><button onclick="location.reload()" style="margin-top:12px;padding:10px 20px;background:#003087;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">Recarregar</button></div>`; }
+})();
+</script>
+</body>
+</html>

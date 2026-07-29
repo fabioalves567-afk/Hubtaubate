@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIP Monitor – Fahrwerk VW</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#001E50;--blue2:#002E7A;--accent:#0055CC;--accent-light:#EBF2FF;
+  --ok:#15803d;--ok-bg:#16a34a;--ok-bd:#16a34a;
+  --nok:#b91c1c;--nok-bg:#dc2626;--nok-bd:#dc2626;
+  --warn:#92400E;--warn-bg:#FFFBEB;--warn-bd:#FCD34D;
+  --bd:#D1D5DB;--bdl:#E5E7EB;--bg:#F3F4F6;--surf:#FFFFFF;--surf2:#F9FAFB;
+  --tx:#111827;--tx2:#374151;--mu:#6B7280;--r:8px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:15px;line-height:1.5}
+
+/* HEADER */
+.hdr{background:var(--blue);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--accent)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--blue);flex-shrink:0}
+.t1{font-size:18px;font-weight:700;color:#fff}
+.t2{font-size:11px;color:#93C5FD;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.kw-wrap{text-align:right}
+.kw-l{font-size:10px;color:#93C5FD;text-transform:uppercase;letter-spacing:.5px}
+.kw-v{font-size:17px;font-weight:700;color:#fff;font-family:'DM Mono',monospace}
+
+/* META */
+.meta{background:var(--surf);border-bottom:1px solid var(--bd);padding:10px 20px;display:flex;gap:0;align-items:stretch;flex-wrap:wrap}
+.mf{display:flex;flex-direction:column;padding:0 20px 0 0;margin:0 20px 0 0;border-right:1px solid var(--bdl)}
+.mf:last-child{border:none;margin:0;padding:0}
+.mf label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);font-weight:600;margin-bottom:3px}
+.mf select,.mf .val{font-size:15px;font-weight:600;color:var(--accent);background:transparent;border:none;outline:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0}
+
+/* PROGRESS */
+.prog{background:var(--surf);padding:10px 20px 14px;border-bottom:1px solid var(--bd)}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.prog-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--mu)}
+.prog-pct{font-size:13px;font-weight:700;color:var(--ok);font-family:'DM Mono',monospace}
+.prog-bar{height:8px;background:var(--bdl);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--ok));border-radius:99px;transition:width .4s}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:16px 20px 0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:9px 16px;border-radius:var(--r) var(--r) 0 0;border:1.5px solid var(--bd);border-bottom:none;background:var(--surf2);color:var(--mu);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab:hover{background:var(--surf);color:var(--tx2)}
+.tab.active{background:var(--surf);color:var(--blue);border-color:var(--accent);border-bottom:1.5px solid var(--surf)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0}
+.tab.done .dot{background:var(--ok)}
+.tab.has-nok .dot{background:var(--nok)}
+.tab.lid-ok .dot{background:var(--ok);box-shadow:0 0 0 2px var(--ok-bd)}
+
+/* PANELS */
+.main{padding:0 20px 110px}
+.panel{display:none;background:var(--surf);border:1.5px solid var(--accent);border-top:none;border-radius:0 var(--r) var(--r) var(--r);overflow:hidden}
+.panel.active{display:block}
+
+/* SUMMARY */
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 20px;background:var(--surf2);border-bottom:1px solid var(--bdl)}
+.sc{background:var(--surf);border:1px solid var(--bdl);border-radius:var(--r);padding:10px 14px;text-align:center}
+.sc-n{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.sc-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mu);margin-top:3px}
+.s-ok .sc-n{color:var(--ok)}.s-nok .sc-n{color:var(--nok)}.s-p .sc-n{color:var(--accent)}
+
+/* AMOSTRA */
+.am-hdr{background:var(--blue);padding:9px 20px;display:flex;align-items:center;justify-content:space-between}
+.am-t{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#93C5FD}
+.am-b{font-size:10px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:99px}
+
+/* CHECK ITEMS */
+.ci{display:grid;grid-template-columns:1fr 80px 80px;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--bdl);transition:background .12s}
+.ci:last-child{border:none}
+.ci:hover{background:var(--surf2)}
+.ci-n{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mu);margin-bottom:3px}
+.ci-l{font-size:14px;font-weight:500;color:var(--tx);line-height:1.4}
+.bok,.bnk{width:78px;height:38px;border-radius:6px;border:1.5px solid;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;background:transparent;font-family:'DM Sans',sans-serif}
+.bok{border-color:var(--ok-bd);color:var(--ok);font-weight:800}
+.bok.s{background:var(--ok-bg);border-color:var(--ok-bd);color:#fff}
+.bnk{border-color:var(--nok-bd);color:var(--nok);font-weight:800}
+.bnk.s{background:var(--nok-bg);border-color:var(--nok-bd);color:#fff}
+.bok:hover:not(.s){background:var(--ok-bg)}
+.bnk:hover:not(.s){background:var(--nok-bg)}
+
+/* VISTO SECTION */
+.visto-sec{border-top:2px solid var(--bdl)}
+.visto-hdr{padding:11px 20px;display:flex;align-items:center;gap:10px;background:var(--surf);border-bottom:1px solid var(--bdl)}
+.visto-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tx2)}
+
+/* Visto Card */
+.visto-card{display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--surf);border-bottom:1px solid var(--bdl)}
+.visto-card:last-child{border-bottom:none}
+.vav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:2px solid}
+.vav-mon{background:var(--accent-light);border-color:var(--accent)}
+.vav-lid{background:#FEF9C3;border-color:#CA8A04}
+.vav-lid-lock{background:var(--surf2);border-color:var(--bdl)}
+.vinfo{flex:1;min-width:0}
+.vname{font-size:14px;font-weight:700;color:var(--tx)}
+.vrole{font-size:11px;color:var(--mu);margin-top:1px}
+.vstatus{margin-top:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;border:1.5px solid}
+.chip-ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-bd)}
+.chip-pend{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-bd)}
+.chip-lock{background:var(--surf2);color:var(--mu);border-color:var(--bdl)}
+.vbtn{padding:9px 16px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.vbtn-mon{background:var(--accent);color:#fff}
+.vbtn-mon:hover{background:var(--blue2)}
+.vbtn-lid{background:var(--blue);color:#fff}
+.vbtn-lid:hover{background:var(--blue2)}
+.vbtn-desfazer{background:var(--surf2);color:var(--mu);border:1px solid var(--bd)!important;font-size:12px;padding:7px 12px}
+.vbtn-desfazer:hover{background:var(--nok-bg);color:var(--nok)}
+
+/* ACTIONS */
+.act{padding:14px 20px;display:flex;gap:10px;border-top:1px solid var(--bdl);background:var(--surf)}
+.bsave{flex:1;padding:12px;background:var(--blue);border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .18s}
+.bsave:hover{background:var(--blue2)}
+.bacao{padding:12px 14px;background:var(--nok-bg);border:1.5px solid var(--nok-bd);border-radius:var(--r);color:var(--nok);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.bacao:hover{background:#FEE2E2}
+
+/* TOOLBAR */
+.toolbar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:var(--surf);border-top:2px solid var(--bd);padding:10px 20px 16px;display:flex;gap:8px}
+.tb-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 6px;border-radius:var(--r);border:1.5px solid var(--bd);background:var(--surf2);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.tb-btn:hover{background:var(--accent-light);border-color:var(--accent)}
+.tb-icon{font-size:20px;line-height:1}
+.tb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu)}
+.tb-btn:hover .tb-label{color:var(--accent)}
+.tb-btn.tb-wpp{background:#F0FDF4;border-color:var(--ok-bd)}
+.tb-btn.tb-wpp .tb-label,.tb-btn.tb-wpp:hover .tb-label{color:var(--ok)}
+.tb-btn.tb-cfg{background:var(--accent-light);border-color:var(--accent)}
+.tb-btn.tb-cfg .tb-label,.tb-btn.tb-cfg:hover .tb-label{color:var(--accent)}
+
+/* OVERLAYS */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.ov.open{display:flex}
+.mod{background:var(--surf);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:400px;overflow:hidden;max-height:90vh;overflow-y:auto}
+
+/* PIN KEYPAD */
+.pin-hdr{padding:16px 20px;border-bottom:1px solid var(--bdl);display:flex;align-items:center;justify-content:space-between}
+.pin-title{font-size:16px;font-weight:700;color:var(--tx)}
+.pin-sub{font-size:12px;color:var(--mu);margin-top:2px}
+.mod-x{background:var(--surf2);border:1px solid var(--bd);color:var(--mu);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pin-body{padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pin-av{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.pin-av-mon{background:var(--accent-light);border:3px solid var(--accent)}
+.pin-av-lid{background:#FEF9C3;border:3px solid #CA8A04}
+.pin-av-adm{background:var(--surf2);border:3px solid var(--bd)}
+.pin-name{font-size:16px;font-weight:700;color:var(--tx);text-align:center}
+.pin-role{font-size:12px;color:var(--mu);text-align:center;margin-top:-8px}
+.pin-dots{display:flex;gap:12px;margin:2px 0}
+.pd{width:16px;height:16px;border-radius:50%;border:2px solid var(--bd);background:transparent;transition:all .15s}
+.pd.on{background:var(--blue);border-color:var(--blue)}
+.pd.err{background:var(--nok);border-color:var(--nok)}
+.pin-err{font-size:13px;color:var(--nok);font-weight:600;min-height:18px;text-align:center}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px}
+.pk{height:56px;border-radius:10px;border:1.5px solid var(--bd);background:var(--surf);color:var(--tx);font-family:'DM Mono',monospace;font-size:20px;font-weight:700;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center}
+.pk:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.pk:active{transform:scale(.94)}
+.pk-del{font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--nok);border-color:var(--nok-bd)}
+.pk-del:hover{background:var(--nok-bg)!important;border-color:var(--nok)!important;color:var(--nok)!important}
+
+/* CONFIG */
+.cfg-hdr{background:var(--blue);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.cfg-t{font-size:15px;font-weight:700;color:#fff}
+.cfg-body{padding:18px;display:flex;flex-direction:column;gap:12px}
+.cfg-sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:4px 0 2px;border-bottom:1px solid var(--bdl);margin-bottom:2px}
+.fi{display:flex;flex-direction:column;gap:4px}
+.fi label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu)}
+.fi input{width:100%;background:var(--surf);border:1.5px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s}
+.fi input:focus{border-color:var(--accent)}
+.fi input[type=password]{font-family:'DM Mono',monospace;letter-spacing:4px;font-size:16px}
+.fi-hint{font-size:11px;color:var(--mu);margin-top:2px}
+.btn-blue{width:100%;padding:12px;background:var(--blue);border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.btn-blue:hover{background:var(--blue2)}
+.cfg-msg{font-size:12px;text-align:center;min-height:16px}
+.hdiv{border:none;border-top:1px solid var(--bdl)}
+
+/* BACKUP */
+.bk-hdr{background:var(--blue);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.bk-t{font-size:15px;font-weight:700;color:#fff}
+.bk-body{padding:18px;display:flex;flex-direction:column;gap:12px}
+.bk-info{font-size:13px;color:var(--mu);background:var(--surf2);border-radius:var(--r);padding:12px;border:1px solid var(--bdl);line-height:1.6}
+.btn-green{width:100%;padding:12px;background:var(--ok);border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-green:hover{background:#14532D}
+.btn-wpp-full{width:100%;padding:12px;background:#25D366;border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wpp-full:hover{background:#128C7E}
+.btn-warn{width:100%;padding:12px;background:var(--warn-bg);border:1.5px solid var(--warn-bd);border-radius:var(--r);color:var(--warn);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-warn:hover{background:#FEF3C7}
+
+/* AÇÃO */
+.ac-hdr{background:var(--nok);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.ac-t{font-size:15px;font-weight:700;color:#fff}
+.ac-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.ff{display:flex;flex-direction:column;gap:5px}
+.ff label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu)}
+.ff select,.ff textarea{width:100%;background:var(--surf);border:1.5px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s}
+.ff select:focus,.ff textarea:focus{border-color:var(--accent)}
+.ff textarea{resize:vertical;min-height:80px}
+.btn-red{width:100%;padding:12px;background:var(--nok);border:none;border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.btn-red:hover{background:#7F1D1D}
+
+/* SUCCESS */
+.suc-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center}
+.suc-ov.open{display:flex}
+.suc-box{background:#fff;border-radius:16px;padding:32px 40px;text-align:center;animation:popIn .3s ease}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.suc-icon{font-size:52px;margin-bottom:10px}
+.suc-t{font-size:20px;font-weight:700}
+.suc-s{font-size:13px;color:var(--mu);margin-top:6px}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ok);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:11px 22px;border-radius:99px;z-index:600;transition:transform .28s;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--nok)}
+
+/* PRINT */
+@media print{
+  .toolbar,.tabs,.prog,.hdr,.meta,.act,.visto-sec,.sum,.ov,.suc-ov,.toast{display:none!important}
+  body{background:#fff}
+  .main{padding:0}
+  .panel{display:block!important;border:1px solid #ccc;margin-bottom:20px;break-inside:avoid}
+  .print-hdr{display:block!important}
+}
+.print-hdr{display:none;text-align:center;padding:16px;border-bottom:2px solid #001E50;margin-bottom:8px}
+.print-hdr h2{font-size:18px;color:#001E50;font-weight:700}
+.print-hdr p{font-size:12px;color:#666;margin-top:4px}
+</style>
+</head>
+<body>
+
+<div class="print-hdr">
+  <h2>LIP – Liberação Inicial do Processo</h2>
+  <p id="ph-info">Fahrwerk · 2º Turno</p>
+</div>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">VW</div>
+    <div><div class="t1">LIP Monitor</div><div class="t2">Liberação Inicial do Processo</div></div>
+  </div>
+  <div class="kw-wrap" style="display:flex;align-items:center;gap:6px"><button id="kw-prev" onclick="navWeek(-1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;width:28px;height:28px;border-radius:6px;font-size:16px;cursor:pointer;line-height:1">‹</button><div style="text-align:center"><div class="kw-l">Semana</div><div class="kw-v" id="kw">KW —</div></div><button id="kw-next" onclick="navWeek(1)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;width:28px;height:28px;border-radius:6px;font-size:16px;cursor:pointer;line-height:1">›</button></div>
+</div>
+
+<div class="meta">
+  <div class="mf"><label>Mês</label>
+    <select id="mes"><option>Jan</option><option>Fev</option><option>Mar</option><option>Abr</option><option>Mai</option><option>Jun</option><option>Jul</option><option>Ago</option><option>Set</option><option>Out</option><option>Nov</option><option>Dez</option></select>
+  </div>
+  <div class="mf"><label>Ano</label><span class="val" id="ano">2026</span></div>
+  <div class="mf"><label>Célula</label><span class="val">Fahrwerk</span></div>
+  <div class="mf"><label>Turno</label>
+    <select id="turno"><option>1º</option><option selected>2º</option><option>3º</option></select>
+  </div>
+</div>
+
+<div class="prog">
+  <div class="prog-row"><span class="prog-lbl">Progresso da semana</span><span class="prog-pct" id="pp">0%</span></div>
+  <div class="prog-bar"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" data-day="seg" onclick="sw('seg')">Seg <span class="dot"></span></div>
+  <div class="tab" data-day="ter" onclick="sw('ter')">Ter <span class="dot"></span></div>
+  <div class="tab" data-day="qua" onclick="sw('qua')">Qua <span class="dot"></span></div>
+  <div class="tab" data-day="qui" onclick="sw('qui')">Qui <span class="dot"></span></div>
+  <div class="tab" data-day="sex" onclick="sw('sex')">Sex <span class="dot"></span></div>
+  <div class="tab" data-day="sab" onclick="sw('sab')">Sáb <span class="dot"></span></div>
+</div>
+
+<div class="main" id="panels"></div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="tb-btn" onclick="openBk()">
+    <span class="tb-icon">💾</span><span class="tb-label">Backup</span>
+  </button>
+  <button class="tb-btn" onclick="window.print()">
+    <span class="tb-icon">🖨️</span><span class="tb-label">Imprimir</span>
+  </button>
+  <button class="tb-btn tb-wpp" onclick="doWpp()">
+    <span class="tb-icon">💬</span><span class="tb-label">WhatsApp</span>
+  </button>
+  <button class="tb-btn tb-cfg" onclick="openCfgFlow()">
+    <span class="tb-icon">⚙</span><span class="tb-label">Config</span>
+  </button>
+</div>
+
+<!-- PIN MODAL -->
+<div class="ov" id="ov-pin">
+  <div class="mod">
+    <div class="pin-hdr">
+      <div><div class="pin-title" id="pin-ttl">Identificação</div><div class="pin-sub">Digite o PIN de 4 dígitos</div></div>
+      <button class="mod-x" onclick="closePin()">✕</button>
+    </div>
+    <div class="pin-body">
+      <div class="pin-av pin-av-mon" id="pin-av">🦺</div>
+      <div class="pin-name" id="pin-nm">—</div>
+      <div class="pin-role" id="pin-rl">—</div>
+      <div class="pin-dots">
+        <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div>
+        <div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
+      </div>
+      <div class="pin-err" id="pin-err"></div>
+      <div class="pin-grid">
+        <button class="pk" onclick="pk('1')">1</button>
+        <button class="pk" onclick="pk('2')">2</button>
+        <button class="pk" onclick="pk('3')">3</button>
+        <button class="pk" onclick="pk('4')">4</button>
+        <button class="pk" onclick="pk('5')">5</button>
+        <button class="pk" onclick="pk('6')">6</button>
+        <button class="pk" onclick="pk('7')">7</button>
+        <button class="pk" onclick="pk('8')">8</button>
+        <button class="pk" onclick="pk('9')">9</button>
+        <button class="pk" style="visibility:hidden"></button>
+        <button class="pk" onclick="pk('0')">0</button>
+        <button class="pk pk-del" onclick="pkd()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="ov" id="ov-cfg">
+  <div class="mod">
+    <div class="cfg-hdr"><span class="cfg-t">⚙ Configurações</span>
+      <button class="mod-x" onclick="closeCfg()" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:#fff">✕</button>
+    </div>
+    <div class="cfg-body">
+      <div class="cfg-sec">Monitor</div>
+      <div class="fi"><label>Nome completo</label><input id="c-mn" type="text" placeholder="Ex: Monitor Responsável"></div>
+      <div class="fi"><label>Cargo</label><input id="c-mc" type="text" placeholder="Ex: Monitor Fahrwerk"></div>
+      <div class="fi">
+        <label>PIN do Monitor (4 dígitos)</label>
+        <input id="c-mp" type="password" maxlength="4" inputmode="numeric" placeholder="••••" autocomplete="off">
+        <span class="fi-hint">Em branco = mantém o PIN atual</span>
+      </div>
+      <hr class="hdiv">
+      <div class="cfg-sec">Líder</div>
+      <div class="fi"><label>Nome completo</label><input id="c-ln" type="text" placeholder="Ex: João Silva"></div>
+      <div class="fi"><label>Cargo</label><input id="c-lc" type="text" placeholder="Ex: Líder de Equipe"></div>
+      <div class="fi">
+        <label>PIN do Líder (4 dígitos)</label>
+        <input id="c-lp" type="password" maxlength="4" inputmode="numeric" placeholder="••••" autocomplete="off">
+        <span class="fi-hint">Em branco = mantém o PIN atual</span>
+      </div>
+      <hr class="hdiv">
+      <div class="cfg-sec">Segurança</div>
+      <div class="fi">
+        <label>PIN Admin (acessa estas configurações)</label>
+        <input id="c-ap" type="password" maxlength="4" inputmode="numeric" placeholder="••••" autocomplete="off">
+        <span class="fi-hint">Em branco = mantém o atual &nbsp;|&nbsp; Padrão inicial: 0000</span>
+      </div>
+      <button class="btn-blue" onclick="saveCfg()">💾 Salvar configurações</button>
+      <div class="cfg-msg" id="cfg-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BACKUP MODAL -->
+<div class="ov" id="ov-bk">
+  <div class="mod">
+    <div class="bk-hdr"><span class="bk-t">💾 Backup</span>
+      <button class="mod-x" onclick="closeBk()" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:#fff">✕</button>
+    </div>
+    <div class="bk-body">
+      <div class="bk-info">Salva todos os registros da semana atual. Para restaurar, cole o código no campo abaixo.</div>
+      <button class="btn-green" onclick="doExport()">⬇ Baixar arquivo de backup</button>
+      <button class="btn-wpp-full" onclick="doExportWpp()">💬 Enviar resumo pelo WhatsApp</button>
+      <hr class="hdiv">
+      <div class="fi">
+        <label>Importar backup</label>
+        <textarea id="bk-in" style="width:100%;min-height:80px;background:var(--surf2);border:1.5px solid var(--bd);border-radius:var(--r);color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;padding:10px;outline:none;resize:vertical" placeholder="Cole aqui o código de backup..."></textarea>
+      </div>
+      <button class="btn-warn" onclick="doImport()">⬆ Restaurar backup</button>
+    </div>
+  </div>
+</div>
+
+<!-- AÇÃO MODAL -->
+<div class="ov" id="ov-acao">
+  <div class="mod">
+    <div class="ac-hdr"><span class="ac-t">Tomada de Ação Imediata</span>
+      <button class="mod-x" onclick="closeAcao()" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:#fff">✕</button>
+    </div>
+    <div class="ac-body">
+      <div class="ff"><label>Item com falha</label><select id="mi"><option value="">— Selecione —</option></select></div>
+      <div class="ff"><label>Ação tomada</label>
+        <select id="ma"><option value="">— Selecione —</option>
+          <option>Acionar Líder</option><option>Acionar Manutenção</option>
+          <option>Acionar M. Shimizu</option><option>Pedido ao Depósito</option>
+          <option>Chamar Fábrica Piloto</option><option>Chapelonas / Dispositivos</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="ff"><label>Observação</label><textarea id="mo" placeholder="Descreva a ocorrência..."></textarea></div>
+      <button class="btn-red" onclick="saveAcao()">Registrar ação</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="suc-ov" id="suc-ov">
+  <div class="suc-box">
+    <div class="suc-icon">✅</div>
+    <div class="suc-t" id="suc-t">Confirmado!</div>
+    <div class="suc-s" id="suc-s">—</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const AM=[
+  {id:'a1',label:'Amostra 1',items:[
+    {id:'i1',label:'Verificação da talha reserva do eixo traseiro'},
+    {id:'i2',label:'Gabarito do pino de regulagem da alavanca de mudanças'},
+    {id:'i3',label:'Etiqueta de identificação e calibragem de máquinas'},
+    {id:'i4',label:'Touch screen, sinais sonoros e luminosos da IHM'}
+  ]},
+  {id:'a2',label:'Amostra 2',items:[
+    {id:'i1',label:'Verificação da talha reserva do eixo traseiro'},
+    {id:'i2',label:'Gabarito do pino de regulagem da alavanca de mudanças'},
+    {id:'i3',label:'Etiqueta de identificação e calibragem de máquinas'},
+    {id:'i4',label:'Touch screen, sinais sonoros e luminosos da IHM'}
+  ]}
+];
+const DS=['seg','ter','qua','qui','sex','sab'];
+const DN={seg:'Segunda-feira',ter:'Terça-feira',qua:'Quarta-feira',qui:'Quinta-feira',sex:'Sexta-feira',sab:'Sábado'};
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function _lsg(k,d){try{var v=localStorage.getItem(k);return JSON.parse(v!==null?v:d);}catch(e){return JSON.parse(d);}}
+function _lss(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+let st   =_lsg('lip_st','{}');
+let acoes=_lsg('lip_ac','[]');
+let cfg  =_lsg('lip_cfg',JSON.stringify({
+  monitor:{nome:'',cargo:'Monitor Fahrwerk',pin:''},
+  lider:  {nome:'',cargo:'Líder de Equipe', pin:''},
+  adminPin:'0000'
+}));
+let ad='seg', pinBuf='', pinCb=null;
+let _kwBase=0, _kwOff=0;
+function _kwNum(off){const n=new Date();n.setDate(n.getDate()+off*7);const d=new Date(n.getFullYear(),0,1);return Math.ceil(((n-d)/86400000+d.getDay()+1)/7);}
+function _kwKey(off){return 'kw'+_kwNum(off);}
+function _stForWeek(off){if(!st._hist)st._hist={};const k=_kwKey(off);if(!st._hist[k])st._hist[k]={};return st._hist[k];}
+
+
+// ── INIT ──────────────────────────────────────
+
+function navWeek(dir){
+  _kwOff+=dir;
+  const kw=_kwNum(_kwOff);
+  document.getElementById('kw').textContent='KW '+kw;
+  // Disable next button if at current week
+  const nb=document.getElementById('kw-next');
+  if(nb) nb.style.opacity=_kwOff>=0?'0.3':'1';
+  build(); updProg(); updDots();
+  const _nb=document.getElementById('kw-next');
+  if(_nb)_nb.style.opacity='0.3';
+  _kwOff=0;
+}
+function init(){
+  const n=new Date();
+  document.getElementById('ano').textContent=n.getFullYear();
+  document.getElementById('mes').selectedIndex=n.getMonth();
+  const d=new Date(n.getFullYear(),0,1);
+  const kw=Math.ceil(((n-d)/86400000+d.getDay()+1)/7);
+  document.getElementById('kw').textContent='KW '+kw;
+  document.getElementById('ph-info').textContent=`Fahrwerk · 2º Turno · ${MESES[n.getMonth()]} ${n.getFullYear()} · KW ${kw}`;
+  build(); updProg(); updDots();
+}
+
+// ── BUILD ─────────────────────────────────────
+function build(){
+  const c=document.getElementById('panels'); c.innerHTML='';
+  DS.forEach(day=>{
+    const p=document.createElement('div');
+    p.className='panel'+(day===ad?' active':''); p.id='p-'+day;
+    let h=`<div class="sum" id="sm-${day}"></div>`;
+    AM.forEach((am,ai)=>{
+      h+=`<div class="am-hdr"><span class="am-t">${am.label}</span><span class="am-b">Amostra ${ai+1}</span></div>`;
+      am.items.forEach((it,ii)=>{
+        const k=`${day}_${am.id}_${it.id}`,_sw=_stForWeek(_kwOff),v=_sw[k]||null;
+        h+=`<div class="ci" id="ci-${k}">
+          <div><div class="ci-n">Item ${String(ii+1).padStart(2,'0')}</div><div class="ci-l">${it.label}</div></div>
+          <button class="bok${v==='ok'?' s':''}" onclick="chk('${k}','ok','${day}')">OK</button>
+          <button class="bnk${v==='nok'?' s':''}" onclick="chk('${k}','nok','${day}')">NOT OK</button>
+        </div>`;
+      });
+    });
+    h+=buildVisto(day);
+    h+=`<div class="act">
+      <button class="bsave" onclick="saveDay('${day}')">Salvar ${DN[day]}</button>
+      <button class="bacao" onclick="openAcao('${day}',null)">⚠ Ação imediata</button>
+    </div>`;
+    p.innerHTML=h; c.appendChild(p); updSum(day);
+  });
+}
+
+function buildVisto(day){
+  const monOk=st[day+'_mon_ok'], lidOk=st[day+'_lid_ok'];
+  const mNome=cfg.monitor.nome||'Monitor';
+  const lNome=cfg.lider.nome  ||'Líder';
+
+  // Monitor card
+  let mChip, mBtn;
+  if(monOk){
+    mChip=`<span class="chip chip-ok">✓ Assinado — ${mNome}</span>`;
+    mBtn=`<button class="vbtn vbtn-desfazer" onclick="desfazer('${day}','monitor')">Desfazer</button>`;
+  } else {
+    mChip=`<span class="chip chip-pend">Aguardando assinatura</span>`;
+    mBtn=`<button class="vbtn vbtn-mon" onclick="reqVisto('${day}','monitor')">Assinar com PIN</button>`;
+  }
+
+  // Líder card
+  let lCard;
+  if(!monOk){
+    lCard=`<div class="visto-card">
+      <div class="vav vav-lid-lock">🔒</div>
+      <div class="vinfo"><div class="vname">${lNome}</div><div class="vrole">${cfg.lider.cargo}</div>
+        <div class="vstatus"><span class="chip chip-lock">Aguarda visto do Monitor</span></div>
+      </div>
+    </div>`;
+  } else if(lidOk){
+    lCard=`<div class="visto-card">
+      <div class="vav vav-lid">👔</div>
+      <div class="vinfo"><div class="vname">${lNome}</div><div class="vrole">${cfg.lider.cargo}</div>
+        <div class="vstatus"><span class="chip chip-ok">✓ Aprovado — ${lNome}</span></div>
+      </div>
+      <button class="vbtn vbtn-desfazer" onclick="desfazer('${day}','lider')">Desfazer</button>
+    </div>`;
+  } else {
+    lCard=`<div class="visto-card">
+      <div class="vav vav-lid">👔</div>
+      <div class="vinfo"><div class="vname">${lNome}</div><div class="vrole">${cfg.lider.cargo}</div>
+        <div class="vstatus"><span class="chip chip-pend">Aguardando PIN do Líder</span></div>
+      </div>
+      <button class="vbtn vbtn-lid" onclick="reqVisto('${day}','lider')">Inserir PIN</button>
+    </div>`;
+  }
+
+  return `<div class="visto-sec" id="vs-${day}">
+    <div class="visto-hdr"><span style="font-size:16px">📋</span><span class="visto-ttl">Vistos de Liberação</span></div>
+    <div class="visto-card">
+      <div class="vav vav-mon">🦺</div>
+      <div class="vinfo"><div class="vname">${mNome}</div><div class="vrole">${cfg.monitor.cargo}</div>
+        <div class="vstatus">${mChip}</div>
+      </div>
+      ${mBtn}
+    </div>
+    ${lCard}
+  </div>`;
+}
+
+// ── CHECK ITEMS ───────────────────────────────
+function chk(k,v,day){
+  var _sw=_stForWeek(_kwOff);
+  _sw[k]=_sw[k]===v?null:v;
+  st._hist[_kwKey(_kwOff)]=_sw; sv();
+  const ci=document.getElementById('ci-'+k);
+  if(ci){
+    ci.querySelector('.bok').className='bok'+(_sw[k]==='ok'?' s':'');
+    ci.querySelector('.bnk').className='bnk'+(_sw[k]==='nok'?' s':'');
+  }
+  if(v==='nok'&&_sw[k]==='nok') openAcao(day,k);
+  updProg(); updDots(); updSum(day);
+}
+function sv(){ _lss('lip_st',JSON.stringify(st)) }
+
+// ── VISTO ─────────────────────────────────────
+function reqVisto(day,type){
+  const p=type==='monitor'?cfg.monitor:cfg.lider;
+  if(!p.pin){ toast('PIN não cadastrado. Vá em ⚙ Config.',true); return; }
+  if(!p.nome){ toast('Nome não cadastrado. Vá em ⚙ Config.',true); return; }
+  openPin(
+    type==='monitor'?'Visto do Monitor':'Visto do Líder',
+    p.nome, p.cargo,
+    type==='monitor'?'🦺':'👔',
+    type==='monitor'?'pin-av-mon':'pin-av-lid',
+    (entered)=>{
+      if(entered===p.pin){
+        st[day+'_'+(type==='monitor'?'mon':'lid')+'_ok']=true;
+        sv(); closePin(); rebVisto(day);
+        showSuc(type==='monitor'?'Monitor assinou!':'Líder assinou!', p.nome);
+      } else {
+        shakeDots();
+        document.getElementById('pin-err').textContent='PIN incorreto. Tente novamente.';
+        pinBuf=''; updDots2('');
+      }
+    }
+  );
+}
+
+function desfazer(day,type){
+  if(!confirm(`Desfazer visto do ${type==='monitor'?'Monitor':'Líder'}?`)) return;
+  if(type==='monitor'){ delete st[day+'_mon_ok']; delete st[day+'_lid_ok']; } // reset ambos se monitor
+  else { delete st[day+'_lid_ok']; }
+  sv(); rebVisto(day); updDots();
+}
+
+function rebVisto(day){
+  const old=document.getElementById('vs-'+day); if(!old) return;
+  const d=document.createElement('div'); d.innerHTML=buildVisto(day); old.replaceWith(d.firstChild);
+  updDots();
+}
+
+// ── PIN ───────────────────────────────────────
+function openPin(title,nome,role,icon,avCls,cb){
+  pinBuf=''; pinCb=cb; updDots2('');
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-ttl').textContent=title;
+  document.getElementById('pin-nm').textContent=nome;
+  document.getElementById('pin-rl').textContent=role;
+  const av=document.getElementById('pin-av'); av.textContent=icon; av.className='pin-av '+avCls;
+  document.getElementById('ov-pin').classList.add('open');
+}
+function pk(d){ if(pinBuf.length>=4)return; pinBuf+=d; updDots2(pinBuf); if(pinBuf.length===4) setTimeout(()=>{if(pinCb)pinCb(pinBuf);},220); }
+function pkd(){ pinBuf=pinBuf.slice(0,-1); updDots2(pinBuf); document.getElementById('pin-err').textContent=''; }
+function updDots2(buf){ for(let i=0;i<4;i++){ const d=document.getElementById('pd'+i); d.className='pd'+(i<buf.length?' on':''); } }
+function shakeDots(){ for(let i=0;i<4;i++) document.getElementById('pd'+i).className='pd err'; }
+function closePin(){ document.getElementById('ov-pin').classList.remove('open'); pinBuf=''; pinCb=null; }
+
+// ── SUMMARY / PROGRESS / DOTS ─────────────────
+function updSum(day){
+  const s=document.getElementById('sm-'+day); if(!s)return;
+  let ok=0,nok=0,pend=0;
+  AM.forEach(am=>am.items.forEach(it=>{
+    const v=st[`${day}_${am.id}_${it.id}`];
+    if(v==='ok')ok++; else if(v==='nok')nok++; else pend++;
+  }));
+  s.innerHTML=`
+    <div class="sc s-ok"><div class="sc-n">${ok}</div><div class="sc-l">OK</div></div>
+    <div class="sc s-nok"><div class="sc-n">${nok}</div><div class="sc-l">Not OK</div></div>
+    <div class="sc s-p"><div class="sc-n">${pend}</div><div class="sc-l">Pendente</div></div>`;
+}
+function updProg(){
+  let tot=0,fil=0;
+  DS.forEach(day=>AM.forEach(am=>am.items.forEach(it=>{tot++;if(st[`${day}_${am.id}_${it.id}`])fil++;})));
+  const p=tot?Math.round(fil/tot*100):0;
+  document.getElementById('pf').style.width=p+'%';
+  document.getElementById('pp').textContent=p+'%';
+}
+function updDots(){
+  DS.forEach(day=>{
+    const t=document.querySelector(`[data-day="${day}"]`); if(!t)return;
+    let tot=0,fil=0,nn=false;
+    AM.forEach(am=>am.items.forEach(it=>{tot++;const v=st[`${day}_${am.id}_${it.id}`];if(v){fil++;if(v==='nok')nn=true;}}));
+    t.classList.remove('done','has-nok','lid-ok');
+    if(st[day+'_lid_ok'])      t.classList.add('lid-ok');
+    else if(fil===tot&&tot>0)  t.classList.add('done');
+    if(nn) t.classList.add('has-nok');
+  });
+}
+
+// ── TABS / SAVE ───────────────────────────────
+function sw(day){
+  ad=day;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('p-'+day)?.classList.add('active');
+  document.querySelector(`[data-day="${day}"]`)?.classList.add('active');
+}
+function saveDay(day){
+  let all=true;
+  AM.forEach(am=>am.items.forEach(it=>{if(!st[`${day}_${am.id}_${it.id}`])all=false;}));
+  if(!all){toast('Há itens sem verificação!',true);return;}
+  sv(); toast(`${DN[day]} salvo!`); updDots();
+}
+
+// ── AÇÃO ──────────────────────────────────────
+function openAcao(day,key){
+  const sel=document.getElementById('mi');
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  AM.forEach(am=>am.items.forEach(it=>{
+    const k=`${day}_${am.id}_${it.id}`,o=document.createElement('option');
+    o.value=k; o.textContent=`[${am.label}] ${it.label}`; if(k===key)o.selected=true; sel.appendChild(o);
+  }));
+  document.getElementById('mo').value=''; document.getElementById('ma').value='';
+  document.getElementById('ov-acao').classList.add('open');
+}
+function closeAcao(){ document.getElementById('ov-acao').classList.remove('open') }
+function saveAcao(){
+  const item=document.getElementById('mi').value,acao=document.getElementById('ma').value,obs=document.getElementById('mo').value;
+  if(!item||!acao){toast('Preencha item e ação!',true);return;}
+  acoes.push({item,acao,obs,ts:new Date().toLocaleString('pt-BR')});
+  _lss('lip_ac',JSON.stringify(acoes));
+  closeAcao(); toast('Ação registrada!');
+}
+
+// ── CONFIG ────────────────────────────────────
+function openCfgFlow(){
+  if(!cfg.adminPin||cfg.adminPin==='0000'){
+    renderCfg(); document.getElementById('ov-cfg').classList.add('open'); return;
+  }
+  openPin('Acesso Admin','Administrador','Acesso às configurações','⚙','pin-av-adm',
+    (entered)=>{
+      if(entered===cfg.adminPin){ closePin(); renderCfg(); document.getElementById('ov-cfg').classList.add('open'); }
+      else { shakeDots(); document.getElementById('pin-err').textContent='PIN incorreto.'; pinBuf=''; updDots2(''); }
+    }
+  );
+}
+function renderCfg(){
+  document.getElementById('c-mn').value=cfg.monitor.nome||'';
+  document.getElementById('c-mc').value=cfg.monitor.cargo||'';
+  document.getElementById('c-mp').value='';
+  document.getElementById('c-ln').value=cfg.lider.nome||'';
+  document.getElementById('c-lc').value=cfg.lider.cargo||'';
+  document.getElementById('c-lp').value='';
+  document.getElementById('c-ap').value='';
+  document.getElementById('cfg-msg').textContent='';
+}
+function closeCfg(){ document.getElementById('ov-cfg').classList.remove('open') }
+function saveCfg(){
+  const mp=document.getElementById('c-mp').value.trim();
+  const lp=document.getElementById('c-lp').value.trim();
+  const ap=document.getElementById('c-ap').value.trim();
+  if((mp&&mp.length!==4)||(lp&&lp.length!==4)||(ap&&ap.length!==4)){
+    const m=document.getElementById('cfg-msg');
+    m.textContent='⚠ PINs devem ter exatamente 4 dígitos.'; m.style.color='var(--nok)'; return;
+  }
+  cfg.monitor.nome =document.getElementById('c-mn').value.trim()||cfg.monitor.nome;
+  cfg.monitor.cargo=document.getElementById('c-mc').value.trim()||cfg.monitor.cargo;
+  if(mp) cfg.monitor.pin=mp;
+  cfg.lider.nome   =document.getElementById('c-ln').value.trim()||cfg.lider.nome;
+  cfg.lider.cargo  =document.getElementById('c-lc').value.trim()||cfg.lider.cargo;
+  if(lp) cfg.lider.pin=lp;
+  if(ap) cfg.adminPin=ap;
+  _lss('lip_cfg',JSON.stringify(cfg));
+  const m=document.getElementById('cfg-msg');
+  m.textContent='✓ Salvo com sucesso!'; m.style.color='var(--ok)';
+  setTimeout(()=>{ closeCfg(); build(); },900);
+}
+
+// ── BACKUP ────────────────────────────────────
+function openBk(){ document.getElementById('bk-in').value=''; document.getElementById('ov-bk').classList.add('open') }
+function closeBk(){ document.getElementById('ov-bk').classList.remove('open') }
+function getKw(){ const n=new Date(); return Math.ceil(((n-new Date(n.getFullYear(),0,1))/86400000+new Date(n.getFullYear(),0,1).getDay()+1)/7); }
+
+function doExport(){
+  const n=new Date();
+  const payload=JSON.stringify({v:2,ts:n.toLocaleString('pt-BR'),mes:MESES[n.getMonth()],ano:n.getFullYear(),kw:getKw(),st,acoes},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`LIP_Fahrwerk_KW${getKw()}_${n.getFullYear()}.json`;
+  a.click(); URL.revokeObjectURL(url); toast('Backup exportado!');
+}
+
+function doExportWpp(){
+  const n=new Date(); const kw=getKw(); const turno=document.getElementById('turno').value;
+  let msg=`📋 *Backup LIP Fahrwerk*\nKW ${kw} · ${MESES[n.getMonth()]} · Turno ${turno}\n\n*Resumo:*\n`;
+  DS.forEach(day=>{
+    let ok=0,nok=0,pend=0;
+    AM.forEach(am=>am.items.forEach(it=>{ const v=st[`${day}_${am.id}_${it.id}`]; if(v==='ok')ok++; else if(v==='nok')nok++; else pend++; }));
+    const s=st[day+'_lid_ok']?'✅':st[day+'_mon_ok']?'🟡':'⬜';
+    msg+=`${s} ${DN[day].slice(0,3)}: OK:${ok} NOK:${nok} Pend:${pend}\n`;
+  });
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function doImport(){
+  const raw=document.getElementById('bk-in').value.trim();
+  if(!raw){toast('Cole o código de backup antes.',true);return;}
+  try{
+    const data=JSON.parse(raw);
+    if(!data.st){toast('Arquivo inválido.',true);return;}
+    if(!confirm(`Restaurar backup de ${data.ts||'—'}?\nIsso substituirá os dados atuais.`))return;
+    st=data.st; acoes=data.acoes||[];
+    sv(); _lss('lip_ac',JSON.stringify(acoes));
+    closeBk(); build(); updProg(); updDots(); toast('Backup restaurado!');
+  }catch(e){ toast('Erro ao ler o backup.',true); }
+}
+
+// ── WHATSAPP RESUMO ───────────────────────────
+function doWpp(){
+  const n=new Date(); const kw=getKw(); const turno=document.getElementById('turno').value;
+  let msg=`📋 *LIP Fahrwerk — Resumo Semanal*\nKW ${kw} · ${MESES[n.getMonth()]} · Turno ${turno}\nMonitor: ${cfg.monitor.nome||'—'}\n\n`;
+  DS.forEach(day=>{
+    let ok=0,nok=0,pend=0;
+    AM.forEach(am=>am.items.forEach(it=>{ const v=st[`${day}_${am.id}_${it.id}`]; if(v==='ok')ok++; else if(v==='nok')nok++; else pend++; }));
+    const monOk=st[day+'_mon_ok'], lidOk=st[day+'_lid_ok'];
+    const sem=lidOk?'✅':monOk?'🟡':'⬜';
+    msg+=`${sem} *${DN[day].slice(0,3)}* — OK:${ok} | NOK:${nok} | Pend:${pend}`;
+    if(monOk) msg+=` | Monitor ✓`;
+    if(lidOk) msg+=` | Líder ✓`;
+    msg+='\n';
+  });
+  if(acoes.length) msg+=`\n⚠ ${acoes.length} ação(ões) registrada(s)`;
+  msg+=`\n\n_${n.toLocaleString('pt-BR')}_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ── SUCCESS / TOAST ───────────────────────────
+function showSuc(t,s){
+  document.getElementById('suc-t').textContent=t; document.getElementById('suc-t').style.color='var(--ok)';
+  document.getElementById('suc-s').textContent=s;
+  document.getElementById('suc-ov').classList.add('open');
+  setTimeout(()=>document.getElementById('suc-ov').classList.remove('open'),1300);
+}
+function toast(msg,err){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' err':'');
+  void t.offsetWidth; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2700);
+}
+
+['ov-pin','ov-cfg','ov-bk','ov-acao'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
+});
+
+init();
+</script>
+</body>
+</html>

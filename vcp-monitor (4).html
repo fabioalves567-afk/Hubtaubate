@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>VCP Monitor — Fahrwerk VW</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --blue:#001e50;--blue2:#003087;--accent:#0066cc;
+  --ok:#16a34a;--ok-bg:#f0fdf4;--ok-bd:#bbf7d0;
+  --nok:#dc2626;--nok-bg:#fef2f2;--nok-bd:#fecaca;
+  --warn:#d97706;--bg:#f1f5f9;--surf:#fff;
+  --bd:#e2e8f0;--bd2:#cbd5e1;
+  --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
+  --r:10px;--sh:0 1px 4px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding-bottom:110px;}
+
+/* HEADER */
+header{background:var(--blue);padding:13px 18px 11px;position:sticky;top:0;z-index:100;}
+.hdr-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.hdr-brand{font-size:10px;color:#7bb3e0;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
+.hdr-title{font-size:19px;font-weight:700;color:#fff;line-height:1.1;margin-top:2px;}
+.hdr-sub{font-size:10px;color:#7bb3e0;letter-spacing:.8px;margin-top:1px;}
+.hdr-kpi{text-align:right;}
+.hdr-val{font-family:'DM Mono',monospace;font-size:22px;color:#fff;}
+.hdr-lbl{font-size:9px;color:#7bb3e0;letter-spacing:1px;}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--bd);overflow-x:auto;overflow-y:visible;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;min-width:max-content;padding:11px 18px;font-size:13px;font-weight:600;color:var(--tx2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s;-webkit-tap-highlight-color:transparent;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* LAYOUT */
+.content{padding:14px;max-width:980px;margin:0 auto;}
+.screen{display:none;}.screen.active{display:block;}
+
+/* INFO BAR */
+.info-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.chip{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:8px 11px;box-shadow:var(--sh);}
+.chip label{font-size:9px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:3px;font-weight:600;}
+.chip input,.chip select{background:none;border:none;color:var(--tx);font-family:'DM Mono',monospace;font-size:15px;font-weight:500;width:100%;outline:none;}
+.chip select option{background:#fff;}
+
+/* ACTION BAR */
+.action-bar{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.btn-act{flex:1;min-width:100px;padding:9px 10px;border-radius:var(--r);font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid var(--bd2);background:#fff;color:var(--tx2);
+  display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;white-space:nowrap;}
+.btn-act:hover{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
+
+/* CARD */
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:14px;box-shadow:var(--sh);overflow:hidden;}
+.card-head{background:linear-gradient(90deg,var(--blue),var(--blue2));padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.sample-badge{background:#fff;color:var(--blue);font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 9px;border-radius:20px;}
+.card-title{font-size:12px;font-weight:600;color:#c8daf0;flex:1;}
+.btn-ico{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;
+  border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.btn-ico:hover{background:rgba(220,38,38,.5);}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+/* TABLE */
+.vcp-table{width:100%;border-collapse:collapse;table-layout:auto;}
+.vcp-table thead th{font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;
+  padding:7px 4px;border-bottom:1px solid var(--bd);text-align:center;white-space:nowrap;}
+.vcp-table thead th.ic{text-align:left;padding-left:13px;}
+.vcp-table tbody tr{border-bottom:1px solid var(--bd);}
+.vcp-table tbody tr:last-child{border-bottom:none;}
+.vcp-table td{padding:5px 4px;text-align:center;vertical-align:top;}
+.vcp-table td.ic{text-align:left;padding-left:13px;padding-right:8px;vertical-align:middle;}
+
+/* ITEM NAME */
+.item-txt{font-size:11px;color:var(--tx);line-height:1.4;}
+.item-inp{font-size:11px;color:var(--tx);border:none;outline:none;width:100%;
+  border-bottom:1.5px solid var(--accent);padding-bottom:2px;background:none;font-family:'DM Sans',sans-serif;}
+.item-acts{display:flex;gap:3px;margin-top:3px;}
+.btn-sm{font-size:9px;font-weight:700;border:1px solid var(--bd2);border-radius:4px;
+  padding:2px 6px;cursor:pointer;background:none;color:var(--tx3);transition:all .15s;}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm.d:hover{border-color:var(--nok);color:var(--nok);}
+
+/* DAY CELL */
+.vcp-table thead th:not(.ic){ width:50px; min-width:50px; }
+.vcp-table td:not(.ic){ width:50px; min-width:50px; }
+.day-cell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 1px;}
+.on-pair{display:flex;flex-direction:column !important;gap:3px;align-items:center;width:100%;}
+.btn-ok,.btn-nok{
+  border:none;cursor:pointer;border-radius:6px;
+  font-size:11px;font-weight:700;
+  padding:5px 0;width:42px;
+  display:block !important;
+  transition:all .15s;
+}
+.btn-ok {background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd);}
+.btn-nok{background:var(--nok-bg);color:var(--nok);border:1px solid var(--nok-bd);}
+.btn-ok.sel {background:var(--ok);color:#fff;border-color:var(--ok);box-shadow:0 1px 5px rgba(22,163,74,.3);}
+.btn-nok.sel{background:var(--nok);color:#fff;border-color:var(--nok);box-shadow:0 1px 5px rgba(220,38,38,.3);}
+.op-tag{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  text-align:center;letter-spacing:.3px;margin-top:2px;cursor:pointer;
+  padding:1px 2px;border-radius:4px;transition:opacity .15s;max-width:44px;word-break:break-all;}
+.op-tag:hover{opacity:.7;}
+.op-empty{font-size:10px;color:var(--tx3);text-align:center;margin-top:2px;cursor:pointer;transition:color .15s;}
+.op-empty:hover{color:var(--accent);}
+
+/* LEADER ROW */
+.leader-row{padding:10px 14px;border-top:1px solid var(--bd);display:flex;align-items:center;gap:10px;background:#fafbfc;flex-wrap:wrap;}
+.leader-lbl{font-size:11px;color:var(--tx2);font-weight:600;white-space:nowrap;}
+.leader-signed{display:flex;align-items:center;gap:10px;flex:1;
+  background:var(--ok-bg);border:1px solid var(--ok-bd);border-radius:8px;padding:8px 12px;}
+.leader-signed-name{font-size:13px;font-weight:700;color:var(--ok);flex:1;}
+.leader-signed-time{font-size:10px;color:var(--ok);font-family:'DM Mono',monospace;white-space:nowrap;}
+.leader-sign-btn{flex:1;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;border:1.5px dashed var(--bd2);background:#fff;color:var(--tx3);
+  transition:all .15s;display:flex;align-items:center;gap:6px;justify-content:center;}
+.leader-sign-btn:hover{border-color:var(--blue);color:var(--blue);background:#eff6ff;}
+.btn-setup-pin{padding:7px 11px;border-radius:7px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1px solid var(--bd2);background:#fff;color:var(--tx3);transition:all .15s;white-space:nowrap;}
+.btn-setup-pin:hover{border-color:var(--accent);color:var(--accent);}
+.btn-unsign{padding:5px 9px;border-radius:6px;font-size:10px;font-weight:700;
+  cursor:pointer;border:1px solid var(--ok-bd);background:transparent;color:var(--ok);transition:all .15s;}
+.btn-unsign:hover{background:var(--nok-bg);border-color:var(--nok-bd);color:var(--nok);}
+
+/* ADD ROW */
+.add-row{padding:7px 13px;background:#fafbfc;border-top:1px solid var(--bd);}
+.btn-add{background:none;border:1px dashed var(--bd2);border-radius:6px;padding:7px 13px;width:100%;
+  font-size:12px;font-weight:600;color:var(--tx3);cursor:pointer;transition:all .15s;}
+.btn-add:hover{border-color:var(--accent);color:var(--accent);background:#eff6ff;}
+.btn-add-sample{background:none;border:1.5px dashed var(--bd2);border-radius:var(--r);
+  padding:11px;width:100%;font-size:13px;font-weight:600;color:var(--tx3);cursor:pointer;transition:all .15s;margin-top:4px;}
+.btn-add-sample:hover{border-color:var(--blue);color:var(--blue);background:#eff6ff;}
+
+/* SUMMARY */
+.sec-title{font-size:17px;font-weight:700;color:var(--tx);margin-bottom:13px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px;}
+@media(min-width:460px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
+.kpi-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:13px;text-align:center;box-shadow:var(--sh);}
+.kpi-v{font-family:'DM Mono',monospace;font-size:30px;font-weight:500;line-height:1;}
+.kpi-v.ok{color:var(--ok)}.kpi-v.nok{color:var(--nok)}.kpi-v.bl{color:var(--accent)}
+.kpi-l{font-size:10px;color:var(--tx3);letter-spacing:1px;margin-top:4px;font-weight:600;}
+.prog-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;margin-bottom:7px;box-shadow:var(--sh);}
+.prog-head{display:flex;justify-content:space-between;margin-bottom:6px;align-items:center;}
+.prog-name{font-size:12px;color:var(--tx);font-weight:500;}
+.prog-pct{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;}
+.prog-track{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* HISTORY */
+.hist-card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;margin-bottom:7px;box-shadow:var(--sh);}
+.hist-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.hist-kw{font-size:13px;font-weight:700;color:var(--blue);}
+.hist-date{font-size:10px;color:var(--tx3);}
+.hist-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.4px;}
+.pill.ok {background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd);}
+.pill.nok{background:var(--nok-bg);color:var(--nok);border:1px solid var(--nok-bd);}
+.pill.bl {background:#eff6ff;color:var(--accent);border:1px solid #bfdbfe;}
+.hist-del{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px;transition:color .15s;}
+.hist-del:hover{color:var(--nok);}
+
+/* PIN MODAL */
+.pin-dots{display:flex;justify-content:center;gap:14px;margin:16px 0 20px;}
+.pin-dots span{width:18px;height:18px;border-radius:50%;border:2px solid var(--bd2);background:#fff;transition:all .2s;}
+.pin-dots span.filled{background:var(--blue);border-color:var(--blue);}
+.pin-dots span.err{background:var(--nok);border-color:var(--nok);}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.numpad button{padding:16px 8px;border:1px solid var(--bd2);border-radius:10px;
+  background:#fff;font-family:'DM Mono',monospace;font-size:20px;font-weight:500;
+  color:var(--tx);cursor:pointer;transition:all .15s;}
+.numpad button:active{background:var(--bg);transform:scale(.95);}
+.numpad button.np-aux{font-size:16px;color:var(--tx2);}
+
+/* OP MODAL */
+.on-btns{display:flex;gap:8px;margin-bottom:12px;}
+.on-btns button{flex:1;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.on-ok {background:var(--ok-bg);color:var(--ok);border:2px solid var(--ok-bd);}
+.on-ok.sel {background:var(--ok);color:#fff;border-color:var(--ok);}
+.on-nok{background:var(--nok-bg);color:var(--nok);border:2px solid var(--nok-bd);}
+.on-nok.sel{background:var(--nok);color:#fff;border-color:var(--nok);}
+.op-field label{font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;font-weight:600;display:block;margin-bottom:4px;}
+.op-field input{width:100%;border:1px solid var(--bd2);border-radius:7px;padding:9px 10px;
+  font-family:'DM Mono',monospace;font-size:16px;color:var(--tx);outline:none;
+  text-align:center;letter-spacing:2px;transition:border .15s;background:#fff;}
+.op-field input:focus{border-color:var(--accent);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:13px;padding:22px;width:100%;max-width:370px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:up .2s ease;}
+@keyframes up{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:17px;font-weight:700;color:var(--tx);margin-bottom:7px;}
+.modal p{font-size:13px;color:var(--tx2);margin-bottom:18px;line-height:1.5;}
+.modal-btns{display:flex;gap:8px;}
+.modal-btns button{flex:1;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+.btn-confirm{background:var(--blue);color:#fff;}.btn-confirm:hover{background:var(--blue2);}
+.btn-confirm.red{background:var(--nok);}
+.btn-cancel2{background:var(--bg);color:var(--tx2);border:1px solid var(--bd2) !important;}
+
+/* TOAST */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--tx);color:#fff;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:600;
+  opacity:0;transition:all .25s;pointer-events:none;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.t-ok{background:var(--ok);}.toast.t-nok{background:var(--nok);}
+
+/* FAB */
+.fab{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);
+  padding:9px 14px 16px;display:flex;gap:7px;justify-content:center;
+  box-shadow:0 -4px 18px rgba(0,0,0,.07);z-index:50;}
+.fab button{flex:1;max-width:190px;padding:11px;border-radius:var(--r);font-size:12px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+.fab-save{background:var(--blue);color:#fff;border:none;}.fab-save:hover{background:var(--blue2);}
+.fab-print{background:#fff;color:var(--tx2);border:1px solid var(--bd2);}.fab-print:hover{color:var(--accent);border-color:var(--accent);}
+
+#fileInput{display:none;}
+.empty{text-align:center;padding:44px 20px;color:var(--tx3);}
+.empty-icon{font-size:38px;margin-bottom:10px;}
+.empty p{font-size:13px;}
+.print-hdr{display:none;}
+
+/* SETUP PIN */
+.setpin-field{margin-bottom:12px;}
+.setpin-field label{font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;font-weight:600;display:block;margin-bottom:4px;}
+.setpin-field input{width:100%;border:1px solid var(--bd2);border-radius:7px;padding:9px 11px;
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--tx);outline:none;transition:border .15s;background:#fff;}
+.setpin-field input.mono{font-family:'DM Mono',monospace;font-size:20px;text-align:center;letter-spacing:6px;}
+.setpin-field input:focus{border-color:var(--accent);}
+
+
+/* OPERATOR LIST */
+.op-list-item{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:8px;box-shadow:var(--sh);
+  display:flex;align-items:center;gap:12px;}
+.op-avatar{width:38px;height:38px;border-radius:50%;background:var(--blue);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0;letter-spacing:.5px;}
+.op-info{flex:1;min-width:0;}
+.op-name{font-size:13px;font-weight:700;color:var(--tx);}
+.op-reg{font-family:"DM Mono",monospace;font-size:11px;color:var(--tx3);margin-top:1px;letter-spacing:1px;}
+.op-actions{display:flex;gap:6px;}
+.btn-op-edit{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1px solid var(--bd2);background:#fff;color:var(--tx2);transition:all .15s;}
+.btn-op-edit:hover{border-color:var(--accent);color:var(--accent);}
+.btn-op-del{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1px solid var(--bd2);background:#fff;color:var(--tx3);transition:all .15s;}
+.btn-op-del:hover{border-color:var(--nok);color:var(--nok);}
+.op-empty-state{text-align:center;padding:40px 20px;color:var(--tx3);}
+.op-empty-state .empty-icon{font-size:36px;margin-bottom:10px;}
+.op-empty-state p{font-size:13px;}
+
+@media print{
+  header,.tabs,.action-bar,.add-row,.btn-add-sample,.btn-ico,.item-acts,.fab,.toast,.overlay{display:none!important;}
+  .leader-sign-btn,.btn-setup-pin,.btn-unsign{display:none!important;}
+  body{background:#fff;padding:0;font-size:10px;}
+  .content{padding:0;}
+  .card{box-shadow:none;break-inside:avoid;margin-bottom:10px;border:1px solid #ccc;}
+  .print-hdr{display:block!important;font-size:12px;font-weight:700;color:var(--blue);
+    padding:8px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:12px;}
+  .day-cell{padding:2px;}
+  .op-tag{font-size:10px!important;}
+  .op-empty{display:none!important;}
+  .btn-ok.sel,.btn-nok.sel,.card-head,.leader-signed{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-row">
+    <div>
+      <div class="hdr-brand">Volkswagen · Taubaté</div>
+      <div class="hdr-title">VCP Monitor</div>
+      <div class="hdr-sub">VERIFICAÇÃO DO CUMPRIMENTO PADRÃO</div>
+    </div>
+    <div class="hdr-kpi">
+      <div class="hdr-val" id="hdrPct">—%</div>
+      <div class="hdr-lbl">CONFORMIDADE</div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-tab="registro">📋 Registro</button>
+  <button class="tab" data-tab="resumo">📊 Resumo</button>
+  <button class="tab" data-tab="historico">🗂️ Histórico</button>
+  <button class="tab" data-tab="operadores">👷 Operadores</button>
+</div>
+
+<div class="content screen active" id="screen-registro">
+  <div class="print-hdr" id="printHdr"></div>
+  <div class="info-bar">
+    <div class="chip"><label>Célula</label><input id="celula" value="Fahrwerk"></div>
+    <div class="chip"><label>KW</label><input id="kw" type="number"></div>
+    <div class="chip"><label>Turno</label>
+      <select id="turno"><option>1º</option><option selected>2º</option><option>3º</option></select>
+    </div>
+  </div>
+  <div class="action-bar">
+    <button class="btn-act" id="btnBackup">💾 Backup JSON</button>
+    <button class="btn-act" id="btnRestore">📂 Restaurar</button>
+    <button class="btn-act" id="btnPrint">🖨️ Imprimir / PDF</button>
+  </div>
+  <input type="file" id="fileInput" accept=".json">
+  <div id="amostrasWrap"></div>
+  <button class="btn-add-sample" id="btnAddSample">＋ Nova amostra</button>
+</div>
+
+<div class="content screen" id="screen-resumo">
+  <div class="sec-title">Resumo da Semana</div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div id="progBars"></div>
+</div>
+
+<div class="content screen" id="screen-historico">
+  <div class="sec-title">Histórico de Semanas</div>
+  <div id="histList"></div>
+</div>
+
+
+<div class="content screen" id="screen-operadores">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div class="sec-title" style="margin:0;">Cadastro de Operadores</div>
+    <button class="btn-act" id="btnNewOp" style="flex:0;white-space:nowrap;">＋ Novo Operador</button>
+  </div>
+  <div id="opSearchWrap" style="margin-bottom:12px;">
+    <input id="opSearch" type="text" placeholder="🔍  Buscar por nome ou matrícula..."
+      style="width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:10px 13px;
+             font-family:DM Sans,sans-serif;font-size:13px;color:var(--tx);outline:none;background:#fff;">
+  </div>
+  <div id="opList"></div>
+</div>
+
+<div class="fab">
+  <button class="fab-save" id="btnFabSave">✅ Salvar Semana</button>
+  <button class="fab-print" id="btnFabPrint">🖨️ Imprimir / PDF</button>
+</div>
+
+<!-- MODAL: Salvar -->
+<div class="overlay" id="modal-save">
+  <div class="modal">
+    <h2>Salvar Semana</h2>
+    <p>Os dados serão gravados no histórico e a semana será limpa para o próximo registro.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="save">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirmSave">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Excluir histórico -->
+<div class="overlay" id="modal-del">
+  <div class="modal">
+    <h2>Excluir Registro</h2>
+    <p>Esta semana será removida do histórico permanentemente.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="del">Cancelar</button>
+      <button class="btn-confirm red" id="btnConfirmDel">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Operador -->
+<div class="overlay" id="modal-op">
+  <div class="modal">
+    <h2 id="opTitle">Registrar Operador</h2>
+    <div class="on-btns">
+      <button class="on-ok" id="onOkBtn">✅ OK</button>
+      <button class="on-nok" id="onNokBtn">❌ NOK</button>
+    </div>
+    <div class="op-field" style="margin-bottom:10px;">
+      <label>Matrícula do Operador (7 dígitos)</label>
+      <input id="opInput" type="tel" maxlength="7" placeholder="0000000">
+    </div>
+    <p id="opMsg" style="font-size:11px;color:var(--tx3);min-height:16px;margin-bottom:12px;"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="op">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirmOp">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PIN -->
+<div class="overlay" id="modal-pin">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:32px;margin-bottom:6px;">🔐</div>
+    <h2 id="pinTitle" style="margin-bottom:4px;">Visto do Líder</h2>
+    <p id="pinSub" style="font-size:12px;color:var(--tx3);margin-bottom:0;">Digite o PIN para assinar</p>
+    <div class="pin-dots" id="pinDots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="numpad" id="numpad">
+      <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+      <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+      <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+      <button data-key="clr" class="np-aux">✕</button>
+      <button data-key="0">0</button>
+      <button data-key="del" class="np-aux">⌫</button>
+    </div>
+    <p id="pinErr" style="font-size:12px;color:var(--nok);text-align:center;min-height:18px;margin-top:8px;"></p>
+    <button class="btn-cancel2" data-close="pin" style="width:100%;margin-top:10px;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--bd2);background:var(--bg);color:var(--tx2);">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL: Configurar PIN -->
+<div class="overlay" id="modal-setpin">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:14px;">
+      <div style="font-size:32px;margin-bottom:6px;">⚙️</div>
+      <h2 style="margin-bottom:4px;">Configurar PIN</h2>
+      <p id="setPinMsg" style="font-size:12px;color:var(--tx3);margin:0;">Defina um PIN de 4 dígitos para o líder</p>
+    </div>
+    <div class="setpin-field">
+      <label>Nome do Líder</label>
+      <input id="leaderNameInput" type="text" placeholder="Ex: João Silva">
+    </div>
+    <div class="setpin-field">
+      <label>Novo PIN (4 dígitos)</label>
+      <input id="setPinInput" type="tel" maxlength="4" placeholder="••••" class="mono">
+    </div>
+    <div class="setpin-field">
+      <label>Confirmar PIN</label>
+      <input id="setPinConfirm" type="tel" maxlength="4" placeholder="••••" class="mono">
+    </div>
+    <p id="setPinErr" style="font-size:12px;color:var(--nok);min-height:16px;margin-bottom:10px;"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="setpin">Cancelar</button>
+      <button class="btn-confirm" id="btnSavePin">Salvar PIN</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Cadastrar/Editar Operador -->
+<div class="overlay" id="modal-op-form">
+  <div class="modal">
+    <h2 id="opFormTitle">Novo Operador</h2>
+    <div class="setpin-field">
+      <label>Matrícula (7 dígitos)</label>
+      <input id="opFormReg" type="tel" maxlength="7" placeholder="0000000" class="mono"
+        style="width:100%;border:1px solid var(--bd2);border-radius:7px;padding:9px 11px;
+               font-family:DM Mono,monospace;font-size:20px;text-align:center;letter-spacing:4px;
+               color:var(--tx);outline:none;transition:border .15s;background:#fff;">
+    </div>
+    <div class="setpin-field" style="margin-top:10px;">
+      <label>Nome Completo</label>
+      <input id="opFormName" type="text" placeholder="Ex: Carlos Ferreira"
+        style="width:100%;border:1px solid var(--bd2);border-radius:7px;padding:9px 11px;
+               font-family:DM Sans,sans-serif;font-size:14px;color:var(--tx);
+               outline:none;transition:border .15s;background:#fff;">
+    </div>
+    <p id="opFormErr" style="font-size:12px;color:var(--nok);min-height:16px;margin:8px 0;"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="op-form">Cancelar</button>
+      <button class="btn-confirm" id="btnSaveOpForm">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Excluir operador -->
+<div class="overlay" id="modal-del-op">
+  <div class="modal">
+    <h2>Excluir Operador</h2>
+    <p id="delOpMsg">Este operador será removido do cadastro.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel2" data-close="del-op">Cancelar</button>
+      <button class="btn-confirm red" id="btnConfirmDelOp">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+// ── CONSTANTS ────────────────────────────────────────────────
+const DIAS = ['SEG','TER','QUA','QUI','SEX','SAB'];
+const DEFAULT_ITEMS = [
+  'Liberação WPK (Caso NOK)',
+  'Utilização do pino/gabarito de regulagem da alavanca de mudanças'
+];
+const KEY = 'vcp_v5';
+
+// ── STATE ────────────────────────────────────────────────────
+let state   = loadState() || freshState();
+let delIdx  = null;
+let editing = null;   // {ai, ii}
+let opCtx   = null;   // {ai, ii, di}
+let opResult= null;   // 'ok' | 'nok' | null
+let pinCtx  = null;   // {action:'sign'|'unsign', ai}
+let pinBuf  = '';
+
+function freshState() {
+  return { celula:'Fahrwerk', kw:currentKW(), turno:'2º',
+           amostras:[makeSample(), makeSample()],
+           historico:[], leaderPin:'', leaderName:'', operadores:[] };
+}
+function makeSample() {
+  return { id: Date.now() + Math.random(),
+           items: DEFAULT_ITEMS.map(function(n){ return { name:n, days:newDays() }; }),
+           signed: null };
+}
+function newDays() {
+  return [null,null,null,null,null,null].map(function(){ return { result:null, op:'' }; });
+}
+function currentKW() {
+  var n=new Date(), s=new Date(n.getFullYear(),0,1);
+  return Math.ceil(((n-s)/86400000+s.getDay()+1)/7);
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function render() { renderAmostras(); updateHdr(); persist(); }
+
+function renderAmostras() {
+  syncFields();
+  var wrap = document.getElementById('amostrasWrap');
+  wrap.innerHTML = '';
+  state.amostras.forEach(function(am, ai) {
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    // card head
+    var head = document.createElement('div');
+    head.className = 'card-head';
+    head.innerHTML =
+      '<span class="sample-badge">AMOSTRA ' + (ai+1) + '</span>' +
+      '<span class="card-title">' + esc(state.celula) + ' · Turno ' + esc(state.turno) + ' · KW ' + esc(state.kw) + '</span>';
+    if (state.amostras.length > 1) {
+      var delBtn = document.createElement('button');
+      delBtn.className = 'btn-ico';
+      delBtn.textContent = '✕';
+      delBtn.dataset.action = 'remove-sample';
+      delBtn.dataset.ai = ai;
+      head.appendChild(delBtn);
+    }
+    card.appendChild(head);
+
+    // table wrapper
+    var tblWrap = document.createElement('div');
+    tblWrap.className = 'table-scroll';
+    var tbl = document.createElement('table');
+    tbl.className = 'vcp-table';
+    var thead = document.createElement('thead');
+    var hrow = document.createElement('tr');
+    var th0 = document.createElement('th');
+    th0.className = 'ic';
+    th0.textContent = 'Verificação';
+    hrow.appendChild(th0);
+    DIAS.forEach(function(d) {
+      var th = document.createElement('th');
+      th.textContent = d;
+      hrow.appendChild(th);
+    });
+    thead.appendChild(hrow);
+    tbl.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    tbody.id = 'tb' + ai;
+    tbl.appendChild(tbody);
+    tblWrap.appendChild(tbl);
+    card.appendChild(tblWrap);
+
+    // add-row
+    var addRow = document.createElement('div');
+    addRow.className = 'add-row';
+    var addBtn = document.createElement('button');
+    addBtn.className = 'btn-add';
+    addBtn.textContent = '＋ Adicionar verificação';
+    addBtn.dataset.action = 'add-item';
+    addBtn.dataset.ai = ai;
+    addRow.appendChild(addBtn);
+    card.appendChild(addRow);
+
+    // leader row
+    var lrow = document.createElement('div');
+    lrow.className = 'leader-row';
+    lrow.id = 'lrow' + ai;
+    card.appendChild(lrow);
+
+    wrap.appendChild(card);
+    renderTbody(ai);
+    renderLeaderRow(ai);
+  });
+}
+
+function renderTbody(ai) {
+  var am = state.amostras[ai];
+  var tbody = document.getElementById('tb' + ai);
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  am.items.forEach(function(item, ii) {
+    var tr = document.createElement('tr');
+
+    // item name cell
+    var tdName = document.createElement('td');
+    tdName.className = 'ic';
+    var isEd = editing && editing.ai === ai && editing.ii === ii;
+    if (isEd) {
+      var inp = document.createElement('input');
+      inp.className = 'item-inp';
+      inp.id = 'ed_' + ai + '_' + ii;
+      inp.value = item.name;
+      inp.dataset.action = 'commit-edit';
+      inp.dataset.ai = ai;
+      inp.dataset.ii = ii;
+      tdName.appendChild(inp);
+      setTimeout(function() { inp.focus(); inp.select(); }, 20);
+    } else {
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'item-txt';
+      nameDiv.textContent = item.name;
+      tdName.appendChild(nameDiv);
+      var acts = document.createElement('div');
+      acts.className = 'item-acts';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn-sm';
+      editBtn.textContent = '✏️ Editar';
+      editBtn.dataset.action = 'start-edit';
+      editBtn.dataset.ai = ai;
+      editBtn.dataset.ii = ii;
+      acts.appendChild(editBtn);
+      if (am.items.length > 1) {
+        var delBtn = document.createElement('button');
+        delBtn.className = 'btn-sm d';
+        delBtn.textContent = '🗑';
+        delBtn.dataset.action = 'del-item';
+        delBtn.dataset.ai = ai;
+        delBtn.dataset.ii = ii;
+        acts.appendChild(delBtn);
+      }
+      tdName.appendChild(acts);
+    }
+    tr.appendChild(tdName);
+
+    // day cells
+    DIAS.forEach(function(_, di) {
+      var d   = item.days[di] || { result:null, op:'' };
+      var res = d.result;
+      var op  = d.op || '';
+      var td  = document.createElement('td');
+      var cell = document.createElement('div');
+      cell.className = 'day-cell';
+
+      // OK/NOK buttons
+      var pair = document.createElement('div');
+      pair.className = 'on-pair';
+
+      var okBtn = document.createElement('button');
+      okBtn.className = 'btn-ok' + (res === 'ok' ? ' sel' : '');
+      okBtn.textContent = 'OK';
+      okBtn.dataset.action = 'open-op';
+      okBtn.dataset.ai = ai;
+      okBtn.dataset.ii = ii;
+      okBtn.dataset.di = di;
+      pair.appendChild(okBtn);
+
+      var nokBtn = document.createElement('button');
+      nokBtn.className = 'btn-nok' + (res === 'nok' ? ' sel' : '');
+      nokBtn.textContent = 'NOK';
+      nokBtn.dataset.action = 'open-op';
+      nokBtn.dataset.ai = ai;
+      nokBtn.dataset.ii = ii;
+      nokBtn.dataset.di = di;
+      pair.appendChild(nokBtn);
+
+      cell.appendChild(pair);
+
+      // operator display
+      var opDiv = document.createElement('div');
+      if (op) {
+        opDiv.className = 'op-tag';
+        opDiv.style.color = res === 'ok' ? 'var(--ok)' : 'var(--nok)';
+        var opNome = getOpName(op);
+        opDiv.textContent = opNome ? opNome.split(' ')[0] + ' · ' + op : op;
+        opDiv.dataset.action = 'open-op';
+        opDiv.dataset.ai = ai;
+        opDiv.dataset.ii = ii;
+        opDiv.dataset.di = di;
+      } else {
+        opDiv.className = 'op-empty';
+        opDiv.textContent = '+ mat.';
+        opDiv.dataset.action = 'open-op';
+        opDiv.dataset.ai = ai;
+        opDiv.dataset.ii = ii;
+        opDiv.dataset.di = di;
+      }
+      cell.appendChild(opDiv);
+      td.appendChild(cell);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function renderLeaderRow(ai) {
+  var am  = state.amostras[ai];
+  var row = document.getElementById('lrow' + ai);
+  if (!row) return;
+  row.innerHTML = '';
+
+  var lbl = document.createElement('span');
+  lbl.className = 'leader-lbl';
+  lbl.textContent = 'Visto do Líder:';
+  row.appendChild(lbl);
+
+  if (am.signed) {
+    var signed = document.createElement('div');
+    signed.className = 'leader-signed';
+    signed.innerHTML = '<span style="font-size:16px">✅</span>';
+    var nameS = document.createElement('span');
+    nameS.className = 'leader-signed-name';
+    nameS.textContent = am.signed.name;
+    var timeS = document.createElement('span');
+    timeS.className = 'leader-signed-time';
+    timeS.textContent = am.signed.time;
+    var unBtn = document.createElement('button');
+    unBtn.className = 'btn-unsign';
+    unBtn.textContent = 'Cancelar';
+    unBtn.dataset.action = 'unsign';
+    unBtn.dataset.ai = ai;
+    signed.appendChild(nameS);
+    signed.appendChild(timeS);
+    signed.appendChild(unBtn);
+    row.appendChild(signed);
+  } else {
+    var signBtn = document.createElement('button');
+    signBtn.className = 'leader-sign-btn';
+    signBtn.textContent = '🔐 Assinar com PIN';
+    signBtn.dataset.action = 'sign';
+    signBtn.dataset.ai = ai;
+    row.appendChild(signBtn);
+
+    var setupBtn = document.createElement('button');
+    setupBtn.className = 'btn-setup-pin';
+    setupBtn.textContent = state.leaderPin ? '⚙️ PIN' : '⚙️ Criar PIN';
+    setupBtn.dataset.action = state.leaderPin ? 'change-pin' : 'create-pin';
+    row.appendChild(setupBtn);
+  }
+}
+
+// ── EVENT DELEGATION ─────────────────────────────────────────
+document.body.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-action]');
+  if (!el) return;
+  var a  = el.dataset.action;
+  var ai = el.dataset.ai !== undefined ? +el.dataset.ai : undefined;
+  var ii = el.dataset.ii !== undefined ? +el.dataset.ii : undefined;
+  var di = el.dataset.di !== undefined ? +el.dataset.di : undefined;
+
+  if (a === 'open-op')      { openOpModal(ai, ii, di); }
+  else if (a === 'start-edit')   { startEdit(ai, ii); }
+  else if (a === 'del-item')     { delItem(ai, ii); }
+  else if (a === 'remove-sample'){ removeSample(ai); }
+  else if (a === 'add-item')     { addItem(ai); }
+  else if (a === 'sign')         { requestSign(ai); }
+  else if (a === 'unsign')       { requestUnsign(ai); }
+  else if (a === 'create-pin')   { openSetPin(false); }
+  else if (a === 'change-pin')   { openSetPin(true); }
+});
+
+document.body.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var el = e.target;
+  if (el.dataset.action === 'commit-edit') {
+    commitEdit(+el.dataset.ai, +el.dataset.ii);
+  }
+});
+document.body.addEventListener('blur', function(e) {
+  var el = e.target;
+  if (el.dataset.action === 'commit-edit') {
+    commitEdit(+el.dataset.ai, +el.dataset.ii);
+  }
+}, true);
+
+// ── EDIT NAME ────────────────────────────────────────────────
+function startEdit(ai, ii) { editing = {ai:ai, ii:ii}; renderTbody(ai); }
+function commitEdit(ai, ii) {
+  var el = document.getElementById('ed_' + ai + '_' + ii);
+  if (el) {
+    var v = el.value.trim();
+    if (v) state.amostras[ai].items[ii].name = v;
+  }
+  editing = null;
+  renderTbody(ai);
+  persist();
+}
+
+// ── CRUD ─────────────────────────────────────────────────────
+function addItem(ai) {
+  state.amostras[ai].items.push({ name:'Nova verificação', days:newDays() });
+  editing = { ai:ai, ii:state.amostras[ai].items.length - 1 };
+  renderTbody(ai);
+}
+function delItem(ai, ii) {
+  state.amostras[ai].items.splice(ii, 1);
+  renderTbody(ai);
+  persist();
+}
+function addSample() {
+  state.amostras.push(makeSample());
+  render();
+}
+function removeSample(ai) {
+  state.amostras.splice(ai, 1);
+  render();
+}
+
+// ── OPERATOR MODAL ───────────────────────────────────────────
+function openOpModal(ai, ii, di) {
+  opCtx = { ai:ai, ii:ii, di:di };
+  var d = state.amostras[ai].items[ii].days[di] || { result:null, op:'' };
+  opResult = d.result;
+  document.getElementById('opInput').value = d.op || '';
+  document.getElementById('opTitle').textContent = DIAS[di] + ' · Amostra ' + (ai+1);
+  document.getElementById('opMsg').textContent = '';
+  refreshOpButtons();
+  openModal('op');
+  setTimeout(function(){ document.getElementById('opInput').focus(); }, 80);
+}
+function refreshOpButtons() {
+  document.getElementById('onOkBtn').className  = 'on-ok'  + (opResult === 'ok'  ? ' sel' : '');
+  document.getElementById('onNokBtn').className = 'on-nok' + (opResult === 'nok' ? ' sel' : '');
+}
+document.getElementById('onOkBtn').addEventListener('click',  function(){ opResult = opResult==='ok'  ? null : 'ok';  refreshOpButtons(); });
+document.getElementById('onNokBtn').addEventListener('click', function(){ opResult = opResult==='nok' ? null : 'nok'; refreshOpButtons(); });
+document.getElementById('opInput').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').substring(0,7);
+  var len = this.value.length;
+  document.getElementById('opMsg').textContent =
+    len > 0 && len !== 7 ? '⚠️ Matrícula deve ter 7 dígitos (' + len + '/7)' : '';
+});
+document.getElementById('btnConfirmOp').addEventListener('click', function() {
+  var op = document.getElementById('opInput').value.trim();
+  if (op.length > 0 && op.length !== 7) { toast('Matrícula deve ter 7 dígitos','t-nok'); return; }
+  var d = state.amostras[opCtx.ai].items[opCtx.ii].days[opCtx.di];
+  if (!d) d = state.amostras[opCtx.ai].items[opCtx.ii].days[opCtx.di] = { result:null, op:'' };
+  d.result = opResult;
+  d.op = op;
+  closeModal('op');
+  renderTbody(opCtx.ai);
+  updateHdr();
+  persist();
+});
+
+// ── PIN ──────────────────────────────────────────────────────
+function requestSign(ai) {
+  if (!state.leaderPin) { openSetPin(false); toast('Configure um PIN antes de assinar',''); return; }
+  pinCtx = { action:'sign', ai:ai };
+  pinBuf = '';
+  document.getElementById('pinTitle').textContent = 'Visto do Líder — Amostra ' + (ai+1);
+  document.getElementById('pinSub').textContent   = state.leaderName ? 'Líder: ' + state.leaderName : 'Digite o PIN para assinar';
+  document.getElementById('pinErr').textContent   = '';
+  refreshPinDots();
+  openModal('pin');
+}
+function requestUnsign(ai) {
+  if (!state.leaderPin) { state.amostras[ai].signed = null; persist(); renderLeaderRow(ai); return; }
+  pinCtx = { action:'unsign', ai:ai };
+  pinBuf = '';
+  document.getElementById('pinTitle').textContent = 'Cancelar assinatura';
+  document.getElementById('pinSub').textContent   = 'Digite o PIN do líder para confirmar';
+  document.getElementById('pinErr').textContent   = '';
+  refreshPinDots();
+  openModal('pin');
+}
+
+document.getElementById('numpad').addEventListener('click', function(e) {
+  var btn = e.target.closest('button[data-key]');
+  if (!btn) return;
+  var k = btn.dataset.key;
+  if (k === 'clr')      { pinBuf = ''; }
+  else if (k === 'del') { pinBuf = pinBuf.slice(0,-1); }
+  else if (pinBuf.length < 4) { pinBuf += k; }
+  document.getElementById('pinErr').textContent = '';
+  refreshPinDots();
+  if (pinBuf.length === 4) setTimeout(tryPin, 120);
+});
+
+function refreshPinDots() {
+  var spans = document.querySelectorAll('#pinDots span');
+  spans.forEach(function(s, i) { s.className = i < pinBuf.length ? 'filled' : ''; });
+}
+function tryPin() {
+  if (pinBuf === state.leaderPin) {
+    var ai = pinCtx.ai;
+    if (pinCtx.action === 'sign') {
+      var now = new Date();
+      state.amostras[ai].signed = {
+        name: state.leaderName || 'Líder',
+        time: now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + ' ' + now.toLocaleDateString('pt-BR')
+      };
+      persist(); renderLeaderRow(ai);
+      closeModal('pin'); pinBuf = '';
+      toast('✅ Visto registrado', 't-ok');
+    } else {
+      state.amostras[ai].signed = null;
+      persist(); renderLeaderRow(ai);
+      closeModal('pin'); pinBuf = '';
+      toast('Assinatura removida');
+    }
+  } else {
+    document.querySelectorAll('#pinDots span').forEach(function(s){ s.className='err'; });
+    document.getElementById('pinErr').textContent = 'PIN incorreto. Tente novamente.';
+    setTimeout(function(){ pinBuf=''; refreshPinDots(); }, 800);
+  }
+}
+
+// ── SET PIN ──────────────────────────────────────────────────
+function openSetPin(isChange) {
+  document.getElementById('leaderNameInput').value = state.leaderName || '';
+  document.getElementById('setPinInput').value     = '';
+  document.getElementById('setPinConfirm').value   = '';
+  document.getElementById('setPinErr').textContent = '';
+  document.getElementById('setPinMsg').textContent = isChange ? 'Altere o PIN do líder' : 'Defina um PIN de 4 dígitos para o líder';
+  // enforce digits only
+  ['setPinInput','setPinConfirm'].forEach(function(id){
+    document.getElementById(id).oninput = function(){ this.value = this.value.replace(/\D/g,'').substring(0,4); };
+  });
+  openModal('setpin');
+}
+document.getElementById('btnSavePin').addEventListener('click', function() {
+  var name = document.getElementById('leaderNameInput').value.trim();
+  var p1   = document.getElementById('setPinInput').value;
+  var p2   = document.getElementById('setPinConfirm').value;
+  var err  = document.getElementById('setPinErr');
+  if (!name)          { err.textContent = 'Digite o nome do líder.'; return; }
+  if (p1.length !== 4){ err.textContent = 'O PIN deve ter 4 dígitos.'; return; }
+  if (p1 !== p2)      { err.textContent = 'Os PINs não coincidem.'; return; }
+  state.leaderPin  = p1;
+  state.leaderName = name;
+  persist();
+  closeModal('setpin');
+  state.amostras.forEach(function(_, i){ renderLeaderRow(i); });
+  toast('✓ PIN configurado com sucesso', 't-ok');
+});
+
+// ── TABS ─────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    var id = tab.dataset.tab;
+    document.getElementById('screen-' + id).classList.add('active');
+    tab.classList.add('active');
+    if (id === 'resumo')     renderResumo();
+    if (id === 'historico')  renderHistorico();
+    if (id === 'operadores') renderOperadores();
+  });
+});
+
+// ── MODALS ───────────────────────────────────────────────────
+function openModal(id)  { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(function(btn) {
+  btn.addEventListener('click', function(){ closeModal(btn.dataset.close); });
+});
+
+// ── FAB & ACTION BAR ─────────────────────────────────────────
+document.getElementById('btnFabSave').addEventListener('click',  function(){ openModal('save'); });
+document.getElementById('btnFabPrint').addEventListener('click', doPrint);
+document.getElementById('btnBackup').addEventListener('click',   doBackup);
+document.getElementById('btnRestore').addEventListener('click',  function(){ document.getElementById('fileInput').click(); });
+document.getElementById('btnPrint').addEventListener('click',    doPrint);
+document.getElementById('btnAddSample').addEventListener('click', addSample);
+document.getElementById('btnConfirmSave').addEventListener('click', saveWeek);
+document.getElementById('btnConfirmDel').addEventListener('click', confirmDel);
+document.getElementById('fileInput').addEventListener('change', doRestore);
+
+// ── SAVE WEEK ────────────────────────────────────────────────
+function saveWeek() {
+  var all = getAllDays();
+  var ok  = all.filter(function(d){ return d && d.result==='ok'; }).length;
+  var nok = all.filter(function(d){ return d && d.result==='nok'; }).length;
+  state.historico.push({
+    kw:state.kw, turno:state.turno, celula:state.celula, ok:ok, nok:nok,
+    date: new Date().toLocaleDateString('pt-BR'),
+    snapshot: JSON.parse(JSON.stringify(state.amostras))
+  });
+  state.amostras.forEach(function(am) {
+    am.items.forEach(function(i){ i.days = newDays(); });
+    am.signed = null;
+  });
+  closeModal('save');
+  render();
+  toast('✓ Semana salva no histórico', 't-ok');
+}
+
+// ── BACKUP / RESTORE ─────────────────────────────────────────
+function doBackup() {
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'vcp_kw' + state.kw + '_' + state.celula + '_' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ Backup gerado', 't-ok');
+}
+function doRestore(evt) {
+  var file = evt.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var d = JSON.parse(e.target.result);
+      if (!d.amostras) throw new Error('invalid');
+      // migrate days if needed
+      d.amostras.forEach(function(am) {
+        am.items.forEach(function(item) {
+          item.days = item.days.map(function(day) {
+            if (!day || typeof day !== 'object') return { result: day || null, op:'' };
+            return day;
+          });
+        });
+      });
+      state = d;
+      render();
+      toast('✓ Dados restaurados', 't-ok');
+    } catch(err) {
+      toast('Arquivo inválido', 't-nok');
+    }
+    evt.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── PRINT / PDF ──────────────────────────────────────────────
+function doPrint() {
+  document.getElementById('printHdr').textContent =
+    'VCP Monitor — ' + state.celula + ' | KW ' + state.kw + ' | Turno ' + state.turno + ' | ' + new Date().toLocaleDateString('pt-BR');
+  window.print();
+}
+
+// ── RESUMO ───────────────────────────────────────────────────
+function renderResumo() {
+  var all = getAllDays();
+  var ok  = all.filter(function(d){ return d && d.result==='ok'; }).length;
+  var nok = all.filter(function(d){ return d && d.result==='nok'; }).length;
+  var pct = ok+nok > 0 ? Math.round(ok/(ok+nok)*100) : 0;
+  document.getElementById('kpiGrid').innerHTML =
+    '<div class="kpi-card"><div class="kpi-v ok">' + ok + '</div><div class="kpi-l">OK</div></div>' +
+    '<div class="kpi-card"><div class="kpi-v nok">' + nok + '</div><div class="kpi-l">NOK</div></div>' +
+    '<div class="kpi-card"><div class="kpi-v bl">' + (ok+nok) + '</div><div class="kpi-l">Verificados</div></div>' +
+    '<div class="kpi-card"><div class="kpi-v ' + (pct>=80?'ok':'nok') + '">' + pct + '%</div><div class="kpi-l">Conformidade</div></div>';
+  var pb = document.getElementById('progBars');
+  pb.innerHTML = '';
+  state.amostras.forEach(function(am, ai) {
+    am.items.forEach(function(item) {
+      var filled = item.days.filter(function(d){ return d && d.result !== null; }).length;
+      var okC    = item.days.filter(function(d){ return d && d.result === 'ok'; }).length;
+      var p = filled > 0 ? Math.round(okC/filled*100) : 0;
+      var c = p>=80 ? 'var(--ok)' : p>=50 ? 'var(--warn)' : 'var(--nok)';
+      var nm = item.name.length > 50 ? item.name.substring(0,50) + '…' : item.name;
+      pb.innerHTML +=
+        '<div class="prog-card">' +
+          '<div class="prog-head">' +
+            '<span class="prog-name">A' + (ai+1) + ' — ' + esc(nm) + '</span>' +
+            '<span class="prog-pct" style="color:' + c + '">' + p + '%</span>' +
+          '</div>' +
+          '<div class="prog-track"><div class="prog-fill" style="width:' + p + '%;background:' + c + '"></div></div>' +
+        '</div>';
+    });
+  });
+}
+
+// ── HISTÓRICO ────────────────────────────────────────────────
+function renderHistorico() {
+  var c = document.getElementById('histList');
+  if (!state.historico.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Nenhuma semana salva ainda.</p></div>';
+    return;
+  }
+  c.innerHTML = state.historico.slice().reverse().map(function(h, ri) {
+    var i   = state.historico.length - 1 - ri;
+    var pct = Math.round((h.ok / (h.ok + h.nok || 1)) * 100);
+    return '<div class="hist-card">' +
+      '<div class="hist-head">' +
+        '<div class="hist-kw">KW ' + (h.kw||'—') + ' · Turno ' + h.turno + ' · ' + esc(h.celula) + '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<span class="hist-date">' + h.date + '</span>' +
+          '<button class="hist-del" data-action="del-hist" data-idx="' + i + '">🗑</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hist-pills">' +
+        '<span class="pill ok">✓ ' + h.ok + ' OK</span>' +
+        '<span class="pill nok">✕ ' + h.nok + ' NOK</span>' +
+        '<span class="pill ' + (pct>=80?'ok':'nok') + '">' + pct + '% conf.</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+document.getElementById('histList').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action="del-hist"]');
+  if (!btn) return;
+  delIdx = +btn.dataset.idx;
+  openModal('del');
+});
+function confirmDel() {
+  state.historico.splice(delIdx, 1);
+  delIdx = null;
+  closeModal('del');
+  persist();
+  renderHistorico();
+  toast('Registro excluído');
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function getAllDays() {
+  var out = [];
+  state.amostras.forEach(function(am) {
+    am.items.forEach(function(item) {
+      item.days.forEach(function(d){ out.push(d); });
+    });
+  });
+  return out;
+}
+function updateHdr() {
+  var all = getAllDays();
+  var ok  = all.filter(function(d){ return d && d.result==='ok'; }).length;
+  var nok = all.filter(function(d){ return d && d.result==='nok'; }).length;
+  document.getElementById('hdrPct').textContent = ok+nok > 0 ? Math.round(ok/(ok+nok)*100) + '%' : '—%';
+}
+function syncFields() {
+  state.celula = document.getElementById('celula').value || state.celula;
+  state.kw     = document.getElementById('kw').value     || state.kw;
+  state.turno  = document.getElementById('turno').value  || state.turno;
+  document.getElementById('celula').value = state.celula;
+  document.getElementById('kw').value     = state.kw;
+  document.getElementById('turno').value  = state.turno;
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+function toast(msg, cls) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (cls || '');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+// ── PERSIST ──────────────────────────────────────────────────
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    var d = localStorage.getItem(KEY);
+    if (!d) return null;
+    var s = JSON.parse(d);
+    if (!s.amostras) return null;
+    s.amostras.forEach(function(am) {
+      am.items.forEach(function(item) {
+        item.days = item.days.map(function(day) {
+          if (!day || typeof day !== 'object') return { result: day || null, op:'' };
+          return day;
+        });
+      });
+      if (!am.signed) am.signed = null;
+    });
+    if (!s.leaderPin)  s.leaderPin  = '';
+    if (!s.leaderName) s.leaderName = '';
+    if (!s.operadores) s.operadores = [];
+    return s;
+  } catch(e) { return null; }
+}
+
+
+// ── OPERATORS ────────────────────────────────────────────────
+var opFormEditIdx = null;
+var delOpIdx      = null;
+
+function getOpName(reg) {
+  if (!reg) return '';
+  var found = state.operadores.filter(function(o){ return o.reg === reg; });
+  return found.length ? found[0].nome : '';
+}
+
+function renderOperadores() {
+  var list  = document.getElementById('opList');
+  var query = (document.getElementById('opSearch').value || '').toLowerCase().trim();
+  var ops   = state.operadores.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); });
+  if (query) {
+    ops = ops.filter(function(o){
+      return o.nome.toLowerCase().indexOf(query) >= 0 || o.reg.indexOf(query) >= 0;
+    });
+  }
+  if (!ops.length) {
+    list.innerHTML =
+      '<div class="op-empty-state">' +
+        '<div class="empty-icon">👷</div>' +
+        '<p>' + (query ? 'Nenhum operador encontrado.' : 'Nenhum operador cadastrado ainda.<br>Toque em + Novo Operador para começar.') + '</p>' +
+      '</div>';
+    return;
+  }
+  list.innerHTML = '';
+  ops.forEach(function(op) {
+    var realIdx = state.operadores.indexOf(op);
+    var initials = op.nome.split(' ').slice(0,2).map(function(w){ return w[0] || ''; }).join('').toUpperCase();
+    var item = document.createElement('div');
+    item.className = 'op-list-item';
+    item.innerHTML =
+      '<div class="op-avatar">' + initials + '</div>' +
+      '<div class="op-info">' +
+        '<div class="op-name">' + esc(op.nome) + '</div>' +
+        '<div class="op-reg">Matrícula: ' + esc(op.reg) + '</div>' +
+      '</div>' +
+      '<div class="op-actions">' +
+        '<button class="btn-op-edit" data-action="edit-op" data-idx="' + realIdx + '">✏️ Editar</button>' +
+        '<button class="btn-op-del"  data-action="del-op"  data-idx="' + realIdx + '">🗑</button>' +
+      '</div>';
+    list.appendChild(item);
+  });
+}
+
+// Operator search live filter
+document.getElementById('opSearch').addEventListener('input', renderOperadores);
+
+// New operator button
+document.getElementById('btnNewOp').addEventListener('click', function() {
+  opFormEditIdx = null;
+  document.getElementById('opFormTitle').textContent = 'Novo Operador';
+  document.getElementById('opFormReg').value  = '';
+  document.getElementById('opFormName').value = '';
+  document.getElementById('opFormErr').textContent = '';
+  document.getElementById('opFormReg').removeAttribute('disabled');
+  openModal('op-form');
+  setTimeout(function(){ document.getElementById('opFormReg').focus(); }, 80);
+});
+
+// Only digits in registration field
+document.getElementById('opFormReg').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').substring(0,7);
+});
+
+// Operator event delegation (edit/del)
+document.getElementById('opList').addEventListener('click', function(e) {
+  var el = e.target.closest('[data-action]');
+  if (!el) return;
+  var idx = +el.dataset.idx;
+  if (el.dataset.action === 'edit-op') {
+    opFormEditIdx = idx;
+    var op = state.operadores[idx];
+    document.getElementById('opFormTitle').textContent = 'Editar Operador';
+    document.getElementById('opFormReg').value  = op.reg;
+    document.getElementById('opFormName').value = op.nome;
+    document.getElementById('opFormErr').textContent = '';
+    // lock registration when editing to avoid duplicates
+    document.getElementById('opFormReg').setAttribute('disabled','disabled');
+    openModal('op-form');
+    setTimeout(function(){ document.getElementById('opFormName').focus(); }, 80);
+  } else if (el.dataset.action === 'del-op') {
+    delOpIdx = idx;
+    document.getElementById('delOpMsg').textContent =
+      'Remover "' + state.operadores[idx].nome + '" (mat. ' + state.operadores[idx].reg + ')?';
+    openModal('del-op');
+  }
+});
+
+// Save operator form
+document.getElementById('btnSaveOpForm').addEventListener('click', function() {
+  var reg  = document.getElementById('opFormReg').value.trim();
+  var nome = document.getElementById('opFormName').value.trim();
+  var err  = document.getElementById('opFormErr');
+  if (opFormEditIdx === null && reg.length !== 7) { err.textContent = 'Matrícula deve ter exatamente 7 dígitos.'; return; }
+  if (!nome) { err.textContent = 'Digite o nome do operador.'; return; }
+  // duplicate check
+  var dupIdx = state.operadores.findIndex(function(o,i){ return o.reg === reg && i !== opFormEditIdx; });
+  if (dupIdx >= 0) { err.textContent = 'Matrícula já cadastrada para ' + state.operadores[dupIdx].nome + '.'; return; }
+  if (opFormEditIdx === null) {
+    state.operadores.push({ reg:reg, nome:nome });
+    toast('✓ Operador cadastrado', 't-ok');
+  } else {
+    state.operadores[opFormEditIdx].nome = nome;
+    toast('✓ Operador atualizado', 't-ok');
+  }
+  persist();
+  closeModal('op-form');
+  renderOperadores();
+});
+
+// Confirm delete operator
+document.getElementById('btnConfirmDelOp').addEventListener('click', function() {
+  state.operadores.splice(delOpIdx, 1);
+  delOpIdx = null;
+  persist();
+  closeModal('del-op');
+  renderOperadores();
+  toast('Operador removido');
+});
+
+// ── AUTO-COMPLETE IN OP MODAL ────────────────────────────────
+// When typing matrícula in the day-cell modal, show operator name below
+document.getElementById('opInput').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g,'').substring(0,7);
+  var reg  = this.value;
+  var nome = getOpName(reg);
+  var len  = reg.length;
+  var msg  = '';
+  if (nome) {
+    msg = '👤 ' + nome;
+  } else if (len > 0 && len !== 7) {
+    msg = '⚠️ Matrícula deve ter 7 dígitos (' + len + '/7)';
+  } else if (len === 7) {
+    msg = '⚠️ Matrícula não cadastrada';
+  }
+  document.getElementById('opMsg').textContent = msg;
+});
+
+
+// ── INIT ─────────────────────────────────────────────────────
+document.getElementById('kw').value     = state.kw;
+document.getElementById('celula').value = state.celula;
+document.getElementById('turno').value  = state.turno;
+render();
+</script>
+</body>
+</html>

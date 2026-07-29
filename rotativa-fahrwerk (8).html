@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#001E50"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Fahrwerk"/>
+<title>Fahrwerk · Rotativa</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{height:100%;width:100%;overflow-x:hidden;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F5F6F8;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
+input,select{-webkit-appearance:none;appearance:none;font-size:16px!important;font-family:inherit;}
+input:focus,select:focus{outline:none!important;border-color:#00B0F0!important;box-shadow:0 0 0 3px rgba(0,176,240,0.2)!important;}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+::-webkit-scrollbar{height:3px;width:3px;}
+::-webkit-scrollbar-thumb{background:#D0D4DC;border-radius:2px;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+#btn-atualizar.girando{animation:spin 0.8s linear infinite;}
+
+/* Estrutura */
+#app{min-height:100vh;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px));}
+#header{position:sticky;top:0;z-index:100;background:#001E50;border-bottom:3px solid #00B0F0;padding-top:env(safe-area-inset-top,0px);box-shadow:0 2px 12px rgba(0,21,80,0.3);}
+#header-row{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+#logo{display:flex;align-items:center;gap:10px;}
+#logo-badge{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);font-size:17px;font-weight:900;color:#fff;}
+#logo-title{font-size:14px;font-weight:700;color:#fff;}
+#logo-sub{font-family:'Courier New',monospace;font-size:9px;color:rgba(255,255,255,0.45);}
+#ciclo-badge{border-radius:20px;padding:5px 12px;font-family:'Courier New',monospace;font-size:11px;font-weight:500;display:none;}
+#dias-bar{display:flex;border-top:1px solid rgba(255,255,255,0.1);}
+.dia-btn{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,0.5);font-weight:700;font-size:13px;border-bottom:2px solid transparent;transition:all .15s;}
+.dia-btn.ativo{background:rgba(0,176,240,0.25);color:#00B0F0;border-bottom:2px solid #00B0F0;}
+#content{padding:14px 14px 10px;max-width:700px;margin:0 auto;}
+#bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #EAECF0;box-shadow:0 -4px 16px rgba(0,21,80,0.1);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px;border:none;background:transparent;color:#8B919E;min-height:60px;font-size:10px;gap:3px;}
+.nav-btn.ativo{color:#003D8F;}
+.nav-btn .nav-icon{font-size:18px;line-height:1;}
+.nav-btn.ativo .nav-icon{font-size:20px;}
+.nav-dot{width:20px;height:2px;border-radius:1px;background:#003D8F;display:none;}
+.nav-btn.ativo .nav-dot{display:block;}
+.nav-badge{position:absolute;top:6px;right:50%;margin-right:-18px;width:16px;height:16px;border-radius:50%;background:#00875A;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+
+/* Cards */
+.card{background:#fff;border-radius:14px;border:1px solid #EAECF0;box-shadow:0 1px 6px rgba(0,21,80,0.07);margin-bottom:10px;}
+.card-header{padding:14px 16px;border-bottom:1px solid #EAECF0;font-size:14px;font-weight:700;color:#1A1E2A;}
+.card-body{padding:14px 16px;}
+
+/* Inputs */
+.inp{padding:12px 14px;border-radius:10px;border:1.5px solid #D0D4DC;font-size:16px;color:#1A1E2A;background:#fff;width:100%;display:block;outline:none;}
+.inp-mono{font-family:'Courier New',monospace;}
+.lbl{font-size:12px;font-weight:600;color:#8B919E;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block;}
+.inp-count{font-family:'Courier New',monospace;font-size:10px;color:#8B919E;text-align:right;margin-top:3px;}
+
+/* Botões */
+.btn-main{padding:14px 20px;border-radius:12px;border:none;background:linear-gradient(90deg,#001E50,#003D8F);color:#fff;font-weight:700;font-size:16px;width:100%;box-shadow:0 3px 10px rgba(0,30,80,0.25);}
+.btn-sec{padding:13px 20px;border-radius:12px;border:1.5px solid #D0D4DC;background:#fff;color:#4A5060;font-weight:600;font-size:15px;}
+.btn-pill{padding:10px 16px;border-radius:22px;border:none;background:#F5F6F8;color:#4A5060;font-weight:600;font-size:14px;flex-shrink:0;outline:1.5px solid #D0D4DC;}
+.btn-pill.ativo{background:#003D8F;color:#fff;outline:none;}
+.btn-pill.verde.ativo{background:#00875A;outline:none;}
+.btn-pill.verde{outline:1.5px solid #D0D4DC;}
+
+/* Grade */
+.op-card{background:#fff;border-radius:14px;border:1px solid #EAECF0;box-shadow:0 1px 6px rgba(0,21,80,0.07);margin-bottom:10px;overflow:hidden;}
+.op-header{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #EAECF0;background:#F5F6F8;}
+.op-header.falta{background:#FEF2F2;}
+.ciclos-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:10px 12px;}
+.bloco-lbl{font-size:10px;font-weight:600;letter-spacing:1px;margin-bottom:6px;padding-left:6px;}
+.bloco-lbl.azul{color:#003D8F;border-left:2px solid #003D8F;}
+.bloco-lbl.verde{color:#00875A;border-left:2px solid #00875A;}
+.ciclos-row{display:flex;gap:5px;margin-bottom:8px;}
+.ciclo-cell{flex-shrink:0;min-width:54px;border-radius:8px;padding:6px 4px;text-align:center;cursor:pointer;position:relative;}
+.ciclo-cell .ciclo-hora{font-family:'Courier New',monospace;font-size:9px;color:#8B919E;}
+.ciclo-cell .ciclo-cod{font-family:'Courier New',monospace;font-size:12px;font-weight:600;margin-top:1px;}
+.ciclo-cell .over-dot{position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:#EA580C;display:none;}
+.ciclo-cell.tem-over .over-dot{display:block;}
+.janta-bar{background:#FEF3C7;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:5px 10px;margin-bottom:8px;font-size:11px;color:#92400E;text-align:center;font-weight:600;}
+
+/* Seletor posto */
+.posto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
+.posto-btn{padding:11px 6px;border-radius:10px;font-family:'Courier New',monospace;font-weight:500;font-size:13px;}
+
+/* Toast */
+#toast{position:fixed;bottom:calc(60px + env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);border-radius:24px;padding:11px 22px;font-size:14px;font-weight:600;color:#fff;z-index:1000;box-shadow:0 8px 32px rgba(0,21,80,0.25);display:none;align-items:center;gap:8px;white-space:nowrap;animation:slideUp .2s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(12px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* Bottom sheet modal */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,21,80,0.5);display:none;align-items:flex-end;justify-content:center;z-index:999;animation:fadeIn .2s ease;}
+#modal-overlay.aberto{display:flex;}
+#modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:600px;padding-bottom:env(safe-area-inset-bottom,20px);box-shadow:0 -8px 40px rgba(0,21,80,0.2);animation:sheetUp .25s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{display:flex;justify-content:center;padding:12px 0 8px;}
+.modal-handle-bar{width:36px;height:4px;border-radius:2px;background:#D0D4DC;}
+.modal-body{padding:0 20px 16px;}
+
+/* Mês */
+.mes-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.mes-dia{border:1.5px solid #EAECF0;border-radius:10px;padding:6px 5px;min-height:80px;cursor:pointer;overflow:hidden;background:#fff;}
+.mes-dia.fim{background:#F0F2F5;opacity:.7;cursor:default;}
+.mes-dia.sab-trab{background:#E6F6F0;border-color:rgba(0,135,90,0.35);}
+.mes-dia.hoje{box-shadow:0 0 0 2px #003D8F;}
+.mes-dia.detalhe{background:#E8F4FB;border-color:#00B0F0;box-shadow:0 0 0 2px #00B0F0;}
+.mes-dia-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#1A1E2A;}
+.mes-dia-num.hoje-n{background:#003D8F;color:#fff;font-weight:700;}
+.mes-dia-num.sab-n{background:#00875A;color:#fff;font-weight:700;}
+.mes-dia-num.fim-n{color:#D0D4DC;}
+.mes-pill{display:inline-block;border-radius:3px;padding:0 3px;font-family:'Courier New',monospace;font-size:8px;font-weight:600;margin:1px;}
+
+/* Abas internas */
+.sub-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.scroll-pills{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="header-row">
+      <div id="logo">
+        <div id="logo-badge">W</div>
+        <div>
+          <div id="logo-title">Fahrwerk · Rotativa</div>
+          <div id="logo-sub" id="logo-sub">VW TAUBATÉ · B-OTM-4</div>
+        </div>
+      </div>
+      <div id="ciclo-badge"></div>
+      <button onclick="atualizarApp()" title="Atualizar app" style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation" id="btn-atualizar">🔄</button>
+    </div>
+    <div id="dias-bar"></div>
+  </div>
+  <div id="content"></div>
+  <div id="bottomnav"></div>
+</div>
+<div id="toast"></div>
+<div id="modal-overlay">
+  <div id="modal-sheet">
+    <div class="modal-handle"><div class="modal-handle-bar"></div></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── DADOS ─────────────────────────────────────────────────────────────────────
+const SEQ_DEF=[1,2,3,4,12,5,6,7,8,9,12,17,15,13,10,18,16,14,11,12];
+function getSeq(){return DB.seq||SEQ_DEF;}
+function getPostos(){return DB.postos||POSTOS_DEF;}
+const OPS_DEF=[{id:"9000010",nome:"Francielly"},{id:"9000011",nome:"Operador 11"},{id:"9000012",nome:"Operador 12"},{id:"9000013",nome:"Operador 13"},{id:"9000014",nome:"Operador 14"},{id:"9000015",nome:"Maykon"},{id:"9000016",nome:"Operador 16"},{id:"9000017",nome:"Operador 17"},{id:"9000018",nome:"Operador 18"},{id:"9000019",nome:"Operador 19"},{id:"9000020",nome:"Operador 20"},{id:"9000021",nome:"Bruno F."}];
+const POSTOS_DEF=[{cod:"OP-01",desc:"Eixo Traseiro"},{cod:"OP-02",desc:"Escapamento Secundário"},{cod:"OP-03",desc:"Amortecedor Eixo LE"},{cod:"OP-04",desc:"Amortecedor Eixo LD"},{cod:"OP-05",desc:"Defletoras + Tubulação Freio LE"},{cod:"OP-06",desc:"Pega do tanque / tubulação freio 2"},{cod:"OP-07",desc:"Auxiliar tanque / tubulação Freio 1"},{cod:"OP-08",desc:"Prep. Operação 09"},{cod:"OP-09",desc:"Operação 09"},{cod:"OP-10",desc:"Fixação Eixo Traseiro LE"},{cod:"OP-11",desc:"Fixação Eixo Traseiro LD"},{cod:"OP-12",desc:"Pre torque Torre / Coxins"},{cod:"OP-13",desc:"Fixação Quadro Auxiliar LE"},{cod:"OP-14",desc:"Fixação Quadro Auxiliar LD"},{cod:"OP-15",desc:"Fixação Tanque LE"},{cod:"OP-16",desc:"Fixação Tanque LD"},{cod:"OP-17",desc:"Fixação Amortec. Traseiro LE"},{cod:"OP-18",desc:"Fixação Amortec. Traseiro LD"}];
+const DIAS=["Seg","Ter","Qua","Qui","Sex"];
+const DIAS_F=["Segunda","Terça","Quarta","Quinta","Sexta"];
+const TIPO_FALTA={falta:{label:"Falta",cor:"#DC2626",bg:"#FEF2F2"},atestado:{label:"Atestado",cor:"#EA580C",bg:"#FFF7ED"},ferias:{label:"Férias",cor:"#003D8F",bg:"#E8F4FB"},folga:{label:"Folga",cor:"#00875A",bg:"#E6F6F0"}};
+const CORES_P=["#0057B8","#00875A","#B45309","#9333EA","#DC2626","#0891B2","#059669","#7C3AED","#EA580C","#0369A1","#65A30D","#BE185D","#1D4ED8","#D97706","#15803D","#7E22CE","#B91C1C","#0284C7"];
+const GRADS=[["#001E50","#003D8F"],["#00875A","#00B0A0"],["#7C3AED","#9333EA"],["#B45309","#D97706"],["#DC2626","#EF4444"],["#0891B2","#06B6D4"],["#065F46","#059669"],["#BE185D","#EC4899"],["#C2410C","#EA580C"],["#1D4ED8","#3B82F6"],["#4D7C0F","#65A30D"],["#6B21A8","#A855F7"],["#0E7490","#06B6D4"],["#7C2D12","#EA580C"],["#1E1B4B","#4338CA"],["#064E3B","#059669"],["#4A044E","#9333EA"],["#7F1D1D","#DC2626"]];
+
+// Ciclos: C1-C12=15h-21h | Janta | C13-C14=22h-23h | C15=23h-23:45
+const CICLOS=(()=>{const r=[],f=x=>`${String(Math.floor(x/60)).padStart(2,"0")}:${String(x%60).padStart(2,"0")}`;let m=900;for(let i=0;i<15;i++){if(i===12)m=1320;const d=i===14?45:30;r.push({idx:i,label:`C${i+1}`,ini:f(m),fim:f(m+d),dur:d,posJanta:i>=12});m+=d;}return r;})();
+const CICLOS_SAB=(()=>{const r=[],f=x=>`${String(Math.floor(x/60)).padStart(2,"0")}:${String(x%60).padStart(2,"0")}`;let m=720;for(let i=0;i<12;i++){r.push({idx:i,label:`C${i+1}`,ini:f(m),fim:f(m+30)});m+=30;}return r;})();
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const corP=n=>CORES_P[(n-1+CORES_P.length)%CORES_P.length];
+const pInfo=n=>{const P=getPostos();return n>=1&&n<=P.length?{...P[n-1],cor:corP(n),num:n}:null;};
+const ini=nome=>nome.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
+const fmtD=iso=>{if(!iso)return"";const[y,m,d]=iso.split("-");return`${d}/${m}/${y}`;};
+const fmtTS=iso=>{if(!iso)return"";const d=new Date(iso);return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});};
+const diaSem=iso=>{if(!iso)return"";return["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][new Date(iso+"T12:00:00").getDay()];};
+const logH=(d,a,det)=>({...d,historico:[{ts:new Date().toISOString(),acao:a,detalhe:det},...(d.historico||[])].slice(0,400)});
+const gerarRot=idx=>{const s=getSeq();return Array.from({length:5},(_,d)=>Array.from({length:15},(_,c)=>s[(idx+d*15+c)%s.length]));};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+// ── BANCO ─────────────────────────────────────────────────────────────────────
+const DB0=(ops)=>({versao:9,operadores:ops||OPS_DEF,rotacaoOverride:{},rotacaoSab:{},travados:{},sabados:[],faltas:[],historico:[],seq:null,postos:null});
+const DB_KEY="fahrwerk_db_v9";
+let DB=DB0();
+try{const v=localStorage.getItem(DB_KEY);if(v){const p=JSON.parse(v);if(p.versao>=6){DB=p;if(!DB.travados)DB.travados={};}}}catch{}
+const saveDB=()=>{try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch{}};
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+let ABA="grade";
+let DIA=(()=>{const d=new Date().getDay();return d>=1&&d<=5?d-1:0;})();
+let CICLO_VIVO=null;
+
+// Editor
+let editOp=null,editDia=0,editCiclo=null,editVal=null;
+let editSabOp=null,editSabCiclo=null,editSabVal=null,sabVerAba="lista";
+let sabData="",sabObs="";
+let fOp="",fData="",fTipo="falta",fObs="",fFiltro="todos";
+let hFiltro="todos";
+let novoNome="",novoId="",opAba="lista";
+let mesAno=new Date().getFullYear(),mesMes=new Date().getMonth();
+// Postos e sequência
+let novoCod="",novaDesc="",postosAba="lista",seqEditando=false,seqTemp=null;
+let opFiltroMes="todos",diaDetalhe=null;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getOps(){return DB.operadores||OPS_DEF;}
+function getPosto(opId,diaIdx,cicloIdx){const trav=DB.travados?.[opId];if(trav!==undefined)return trav;const over=DB.rotacaoOverride?.[opId]?.[diaIdx]?.[cicloIdx];if(over!==undefined)return over;const idx=getOps().findIndex(o=>o.id===opId);return gerarRot(Math.max(0,idx))[diaIdx]?.[cicloIdx]||1;}
+function isTravado(opId){return DB.travados?.[opId]!==undefined;}
+function getPostoSab(opId,cicloIdx){const r=DB.rotacaoSab?.[opId];if(r&&r[cicloIdx]!==undefined)return r[cicloIdx];const idx=getOps().findIndex(o=>o.id===opId);const s=getSeq();return s[(Math.max(0,idx)+cicloIdx)%s.length];}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer=null;
+function toast(msg,tipo="ok"){
+  const el=document.getElementById("toast");
+  el.textContent=(tipo==="warn"?"⚠ ":"✓ ")+msg;
+  el.style.background=tipo==="warn"?"#92400E":"#00875A";
+  el.style.display="flex";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.style.display="none",3000);
+}
+
+// ── AVATAR HTML ───────────────────────────────────────────────────────────────
+function avHtml(nome,idx,size=36){
+  const[c1,c2]=GRADS[idx%GRADS.length];
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*0.31)}px;font-weight:700;color:#fff;user-select:none;">${esc(ini(nome))}</div>`;
+}
+
+// ── CICLO VIVO ────────────────────────────────────────────────────────────────
+function atualizarCicloVivo(){
+  const d=new Date(),m=d.getHours()*60+d.getMinutes(),dow=d.getDay();
+  const badge=document.getElementById("ciclo-badge");
+  if(!badge)return;
+  if(dow===6&&m>=720&&m<1080){CICLO_VIVO={sab:Math.floor((m-720)/30)};badge.style.display="block";badge.style.background="rgba(0,135,90,0.3)";badge.style.border="1px solid rgba(0,135,90,0.5)";badge.style.color="#00875A";badge.textContent=`SAB C${CICLO_VIVO.sab+1}`;}
+  else if(m>=900&&m<1260){CICLO_VIVO=Math.floor((m-900)/30);badge.style.display="block";badge.style.background="rgba(0,176,240,0.2)";badge.style.border="1px solid rgba(0,176,240,0.5)";badge.style.color="#00B0F0";badge.textContent=`▶ ${CICLOS[CICLO_VIVO]?.label}`;}
+  else if(m>=1260&&m<1320){CICLO_VIVO="janta";badge.style.display="block";badge.style.background="rgba(245,158,11,0.25)";badge.style.border="1px solid rgba(245,158,11,0.5)";badge.style.color="#F59E0B";badge.textContent="🍽 Janta";}
+  else if(m>=1320&&m<1380){CICLO_VIVO=12+Math.floor((m-1320)/30);badge.style.display="block";badge.style.background="rgba(0,176,240,0.2)";badge.style.border="1px solid rgba(0,176,240,0.5)";badge.style.color="#00B0F0";badge.textContent=`▶ ${CICLOS[CICLO_VIVO]?.label}`;}
+  else if(m>=1380&&m<=1425){CICLO_VIVO=14;badge.style.display="block";badge.style.background="rgba(0,176,240,0.2)";badge.style.border="1px solid rgba(0,176,240,0.5)";badge.style.color="#00B0F0";badge.textContent="▶ C15";}
+  else{CICLO_VIVO=null;badge.style.display="none";}
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  const ops=getOps();
+  if(!editOp&&ops.length)editOp=ops[0].id;
+  if(!fOp&&ops.length)fOp=ops[0].id;
+  if(!editSabOp&&ops.length)editSabOp=ops[0].id;
+
+  document.getElementById("logo-sub").textContent=`VW TAUBATÉ · B-OTM-4 · ${ops.length} operadores`;
+
+  // Barra de dias
+  const diasBar=document.getElementById("dias-bar");
+  if(ABA==="grade"){
+    diasBar.style.display="flex";
+    diasBar.innerHTML=DIAS.map((d,i)=>`<button class="dia-btn${i===DIA?" ativo":""}" onclick="setDia(${i})">${d}</button>`).join("");
+  } else {
+    diasBar.style.display="none";
+  }
+
+  // Bottom nav
+  const ABAS=[{k:"grade",i:"▦",l:"Grade"},{k:"mes",i:"📆",l:"Mês"},{k:"equipe",i:"👥",l:"Equipe"},{k:"editor",i:"✎",l:"Editor"},{k:"postos",i:"🔧",l:"Postos"},{k:"sabados",i:"📅",l:"Sábado"},{k:"faltas",i:"👤",l:"Faltas"},{k:"hist",i:"📋",l:"Hist."}];
+  document.getElementById("bottomnav").innerHTML=ABAS.map(({k,i,l})=>`
+    <button class="nav-btn${ABA===k?" ativo":""}" onclick="setAba('${k}')" style="position:relative">
+      <span class="nav-icon">${i}</span>
+      <span>${l}</span>
+      <span class="nav-dot"></span>
+      ${k==="equipe"&&ABA!=="equipe"?`<span class="nav-badge">${ops.length}</span>`:""}
+    </button>`).join("");
+
+  // Conteúdo
+  const content=document.getElementById("content");
+  if(ABA==="grade") content.innerHTML=renderGrade(ops);
+  else if(ABA==="mes") content.innerHTML=renderMes(ops);
+  else if(ABA==="equipe") content.innerHTML=renderEquipe(ops);
+  else if(ABA==="editor") content.innerHTML=renderEditor(ops);
+  else if(ABA==="sabados") content.innerHTML=renderSabados(ops);
+  else if(ABA==="faltas") content.innerHTML=renderFaltas(ops);
+  else if(ABA==="hist") content.innerHTML=renderHist();
+  else if(ABA==="postos") content.innerHTML=renderPostos();
+
+  bindEvents();
+}
+
+// ── GRADE ─────────────────────────────────────────────────────────────────────
+function renderGrade(ops){
+  const hoje=new Date().toISOString().slice(0,10);
+  let h=`
+  <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+    <button onclick="imprimirGrade()" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;border:none;background:linear-gradient(90deg,#001E50,#003D8F);color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,21,80,0.25)">🖨️ Imprimir semana</button>
+  </div>
+  <div style="background:#E8F4FB;border:1px solid rgba(0,176,240,0.27);border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+    <div style="font-size:10px;font-weight:700;color:#003D8F;letter-spacing:1px;margin-bottom:4px;">SEQUÊNCIA DE ROTAÇÃO</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+      ${(()=>{
+        // Coletar todos os postos travados para destacar na sequência
+        const travPostos=new Set(Object.values(DB.travados||{}));
+        return getSeq().map(n=>{
+          const p=pInfo(n);
+          const trav=travPostos.has(n);
+          // Encontrar operador travado neste posto
+          const opTrav=trav?getOps().find(o=>DB.travados?.[o.id]===n):null;
+          if(trav){
+            return `<span title="🔒 Travado: ${opTrav?.nome||''}" style="background:${p?.cor};border:2px solid ${p?.cor};border-radius:8px;padding:3px 10px;font-family:'Courier New',monospace;font-size:11px;font-weight:800;color:#fff;position:relative;box-shadow:0 2px 8px ${p?.cor}66;display:inline-flex;align-items:center;gap:4px">🔒${p?.cod}</span>`;
+          }
+          return `<span style="background:${p?.cor}22;border:1px solid ${p?.cor}55;border-radius:5px;padding:2px 7px;font-family:'Courier New',monospace;font-size:11px;font-weight:600;color:${p?.cor}">${p?.cod}</span>`;
+        }).join("");
+      })()}
+      <span style="font-family:'Courier New',monospace;font-size:11px;color:#003D8F;align-self:center;">→ repete</span>
+    </div>
+  </div>`;
+
+  ops.forEach((op,oi)=>{
+    const falta=DB.faltas?.find(f=>f.opId===op.id&&f.data===hoje);
+    const rot=Array.from({length:15},(_,c)=>getPosto(op.id,DIA,c));
+    const tipo=falta?TIPO_FALTA[falta.tipo]:null;
+
+    h+=`<div class="op-card">
+      <div class="op-header${falta?" falta":""}">
+        ${avHtml(op.nome,oi,34)}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:#1A1E2A">${esc(op.nome)}</div>
+          <div style="font-family:'Courier New',monospace;font-size:10px;color:#8B919E">${op.id}</div>
+          ${isTravado(op.id)?`<div style="font-size:11px;color:#7C3AED;font-weight:700;margin-top:2px">🔒 Travado · ${pInfo(DB.travados[op.id])?.cod||""} — ${pInfo(DB.travados[op.id])?.desc||""}</div>`:""}
+        </div>
+        ${falta?`<span style="font-size:11px;font-weight:700;color:${tipo.cor};background:${tipo.bg};border-radius:8px;padding:3px 8px">${tipo.label}</span>`:""}
+      </div>
+      <div class="ciclos-scroll">
+        <div class="bloco-lbl azul">BLOCO 1 · 15h–21h</div>
+        <div class="ciclos-row">
+          ${rot.slice(0,12).map((pNum,ci)=>{const p=pInfo(pNum);const isO=DB.rotacaoOverride?.[op.id]?.[DIA]?.[ci]!==undefined;const trav_=isTravado(op.id);return`<div class="ciclo-cell${isO?" tem-over":""}" style="background:${p?p.cor+(trav_?"28":"0e"):"#F5F6F8"};border:${trav_?"2px solid "+p?.cor+"99":"1.5px solid "+(p?p.cor+"33":"#D0D4DC")}" onclick="abrirModal('${op.id}',${oi},${DIA},${ci},${pNum})">
+            <div class="ciclo-hora">${CICLOS[ci].ini}</div>
+            <div class="ciclo-cod" style="color:${p?p.cor:"#D0D4DC"}">${p?p.cod:"—"}</div>
+            <div class="over-dot"></div>
+          </div>`;}).join("")}
+        </div>
+        <div class="janta-bar">🍽 Janta · 21h–22h</div>
+        <div class="bloco-lbl verde">BLOCO 2 · 22h–23:45</div>
+        <div class="ciclos-row">
+          ${rot.slice(12,15).map((pNum,idx)=>{const ci=12+idx;const p=pInfo(pNum);const isO=DB.rotacaoOverride?.[op.id]?.[DIA]?.[ci]!==undefined;const trav2_=isTravado(op.id);return`<div class="ciclo-cell${isO?" tem-over":""}" style="min-width:${ci===14?64:54}px;background:${p?p.cor+(trav2_?"28":"0e"):"#F5F6F8"};border:${trav2_?"2px solid "+p?.cor+"99":"1.5px solid "+(p?p.cor+"33":"#D0D4DC")}" onclick="abrirModal('${op.id}',${oi},${DIA},${ci},${pNum})">
+            <div class="ciclo-hora">${CICLOS[ci].ini}${ci===14?' <span style="color:#00875A">45\'</span>':""}</div>
+            <div class="ciclo-cod" style="color:${p?p.cor:"#D0D4DC"}">${p?p.cod:"—"}</div>
+            <div class="over-dot"></div>
+          </div>`;}).join("")}
+        </div>
+      </div>
+    </div>`;
+  });
+  return h;
+}
+
+// ── EQUIPE ────────────────────────────────────────────────────────────────────
+function renderEquipe(ops){
+  const nTrav=Object.keys(DB.travados||{}).length;
+  let h=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn-pill${opAba==="lista"?" ativo":""}" onclick="setOpAba('lista')">👥 Equipe (${ops.length})</button>
+    <button class="btn-pill verde${opAba==="novo"?" ativo":""}" onclick="setOpAba('novo')">+ Novo Operador</button>
+    <button class="btn-pill${opAba==="ordem"?" ativo":""}" style="${opAba==="ordem"?"background:#7C3AED;":""}color:${opAba==="ordem"?"#fff":"#4A5060"}" onclick="setOpAba('ordem')">↕ Reordenar</button>
+    <button class="btn-pill${opAba==="travados"?" ativo":""}" style="${opAba==="travados"?"background:#7C3AED;":"outline:1.5px solid #7C3AED;"}color:${opAba==="travados"?"#fff":"#7C3AED"}" onclick="setOpAba('travados')">🔒 Travados${nTrav>0?` (${nTrav})`:""}</button>
+  </div>`;
+
+  if(opAba==="novo"){
+    h+=`<div class="card card-body" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:16px">Cadastrar Operador</div>
+      <div style="margin-bottom:12px">
+        <label class="lbl">Nome completo *</label>
+        <input id="inp-nome" class="inp" type="text" placeholder="Nome do operador" maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="words" value="${esc(novoNome)}"/>
+        <div class="inp-count" id="cnt-nome">${novoNome.length}/40</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="lbl">Registro (opcional)</label>
+        <input id="inp-reg" class="inp inp-mono" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 9000010 — 7 dígitos" maxlength="7" autocomplete="off" value="${esc(novoId)}"/>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;align-items:center">
+          <span style="font-size:11px;color:#8B919E">Deixe vazio para gerar automaticamente.</span>
+          <span class="inp-count" style="color:${novoId.length===7?"#00875A":"#8B919E"}" id="cnt-reg">${novoId.length}/7</span>
+        </div>
+      </div>
+      <div style="background:#E8F4FB;border:1px solid rgba(0,176,240,0.3);border-radius:9px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#003D8F">
+        Entrará como <strong>offset ${ops.length}</strong> — posição <strong style="font-family:'Courier New',monospace">${(ops.length%20)+1}/20</strong>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-main" style="flex:1" onclick="addOperador()">✓ Cadastrar</button>
+        <button class="btn-sec" style="flex:0.4" onclick="setOpAba('lista')">Cancelar</button>
+      </div>
+    </div>`;
+  }
+
+  if(opAba==="travados"){
+    const P=getPostos();
+    h+=`<div style="background:#F5F0FF;border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#7C3AED">
+      🔒 Operador travado fica no mesmo posto em <strong>todos os ciclos</strong> do dia, sem rotacionar.
+    </div>
+    <div class="card card-body" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:14px">Travar Operador em Posto</div>
+      <div style="margin-bottom:10px">
+        <label class="lbl">Operador</label>
+        <select id="trav-op" class="inp">
+          ${ops.map((op,oi)=>`<option value="${op.id}">${esc(op.nome)}${(DB.travados||{})[op.id]!==undefined?" 🔒 (já travado)":""}</option>`).join("")}
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="lbl">Posto / Operação</label>
+        <select id="trav-posto" class="inp">
+          <option value="">— selecionar posto —</option>
+          ${P.map((p,i)=>`<option value="${i+1}">${p.cod} — ${p.desc}</option>`).join("")}
+        </select>
+      </div>
+      <button class="btn-main" style="background:linear-gradient(90deg,#5B21B6,#7C3AED)" onclick="travarOp()">🔒 Travar neste posto</button>
+    </div>`;
+
+    // Lista de travados
+    const travEntries=Object.entries(DB.travados||{});
+    h+=`<div class="card">
+      <div class="card-header">Operadores travados <span style="font-family:'Courier New',monospace;font-size:12px;color:#8B919E">(${travEntries.length})</span></div>
+      <div style="padding:12px">
+        ${travEntries.length===0
+          ?`<div style="text-align:center;padding:40px;color:#8B919E;font-size:14px">Nenhum operador travado</div>`
+          :travEntries.map(([opId,postoNum])=>{
+            const op=ops.find(o=>o.id===opId),oi=ops.findIndex(o=>o.id===opId);
+            const p=pInfo(postoNum);
+            return`<div style="display:flex;align-items:center;gap:12px;background:#F5F0FF;border:1px solid rgba(124,58,237,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+              ${avHtml(op?.nome||"?",oi,40)}
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700;color:#1A1E2A">${esc(op?.nome||opId)}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                  <span style="font-size:11px;color:#8B919E">Travado em:</span>
+                  <span style="background:${p?.cor}18;border:1.5px solid ${p?.cor}66;border-radius:7px;padding:3px 10px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:${p?.cor}">${p?.cod||"?"}</span>
+                  <span style="font-size:12px;color:#4A5060">${p?.desc||""}</span>
+                </div>
+                <div style="font-size:10px;color:#7C3AED;font-weight:600;margin-top:3px">🔒 Todos os ciclos · todos os dias</div>
+              </div>
+              <button onclick="destravarOp('${opId}')" style="background:#FEF2F2;border:1px solid rgba(220,38,38,0.27);border-radius:9px;padding:8px 10px;color:#DC2626;font-size:13px;font-weight:600;flex-shrink:0">Destravar</button>
+            </div>`;
+          }).join("")}
+      </div>
+    </div>`;
+  }
+
+  if(opAba==="ordem"){
+    h+=`<div class="card card-body" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:6px">Reordenar Sequência</div>
+      <div style="font-size:12px;color:#8B919E;margin-bottom:14px">A ordem define o offset de cada operador na rotação. Use ▲ ▼ para mover.</div>
+      <div id="ordem-list">
+        ${ops.map((op,oi)=>`<div style="display:flex;align-items:center;gap:10px;background:#F5F6F8;border:1px solid #EAECF0;border-radius:10px;padding:10px 12px;margin-bottom:6px">
+          <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+            <button onclick="moverOp('${op.id}',-1)" ${oi===0?"disabled":""} style="width:28px;height:28px;border-radius:6px;border:1.5px solid #D0D4DC;background:${oi===0?"#F5F6F8":"#fff"};color:${oi===0?"#D0D4DC":"#003D8F"};font-size:14px;font-weight:700;cursor:${oi===0?"default":"pointer"}">▲</button>
+            <button onclick="moverOp('${op.id}',1)" ${oi===ops.length-1?"disabled":""} style="width:28px;height:28px;border-radius:6px;border:1.5px solid #D0D4DC;background:${oi===ops.length-1?"#F5F6F8":"#fff"};color:${oi===ops.length-1?"#D0D4DC":"#003D8F"};font-size:14px;font-weight:700;cursor:${oi===ops.length-1?"default":"pointer"}">▼</button>
+          </div>
+          ${avHtml(op.nome,oi,38)}
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#1A1E2A">${esc(op.nome)}</div>
+            <div style="font-family:'Courier New',monospace;font-size:10px;color:#8B919E">${op.id}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:10px;color:#8B919E">offset</div>
+            <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:700;color:#003D8F">${oi}</div>
+            <div style="font-family:'Courier New',monospace;font-size:9px;color:#8B919E">pos ${(oi%getSeq().length)+1}/${getSeq().length}</div>
+          </div>
+        </div>`).join("")}
+      </div>
+      <div style="margin-top:8px;background:#E6F6F0;border:1px solid rgba(0,135,90,0.27);border-radius:9px;padding:8px 12px;font-size:12px;color:#00875A">
+        ✓ Alterações salvas automaticamente
+      </div>
+    </div>`;
+  }
+
+  h+=`<div class="card">
+    <div class="card-header">Equipe atual <span style="font-family:'Courier New',monospace;font-size:12px;color:#8B919E">(${ops.length} operadores)</span></div>
+    <div style="padding:12px">
+      ${ops.length===0?`<div style="text-align:center;padding:48px;color:#8B919E;font-size:14px">Nenhum operador cadastrado</div>`
+      :ops.map((op,oi)=>`<div style="display:flex;align-items:center;gap:12px;background:#F5F6F8;border:1px solid #EAECF0;border-radius:12px;padding:12px 14px;margin-bottom:8px">
+        ${avHtml(op.nome,oi,40)}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:#1A1E2A">${esc(op.nome)}</div>
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:#8B919E;margin-top:2px">${op.id}</div>
+          <div style="font-size:11px;color:#003D8F;margin-top:3px;font-weight:600">Offset ${oi} · Pos. ${(oi%20)+1}/20</div>
+        </div>
+        <button style="background:#FEF2F2;border:1px solid rgba(220,38,38,0.27);border-radius:9px;padding:8px 10px;color:#DC2626;font-size:13px;font-weight:600;flex-shrink:0" onclick="removerOp('${op.id}')">Remover</button>
+      </div>`).join("")}
+    </div>
+  </div>`;
+  return h;
+}
+
+// ── EDITOR ────────────────────────────────────────────────────────────────────
+function renderEditor(ops){
+  let h=`<div style="background:#E8F4FB;border:1px solid rgba(0,176,240,0.4);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#003D8F">✎ Toque num ciclo para ajuste manual.</div>`;
+
+  // Seletor operador
+  h+=`<div class="card card-body" style="margin-bottom:10px">
+    <label class="lbl">Operador</label>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">
+      ${ops.map((op,oi)=>`<button class="btn-pill${editOp===op.id?" ativo":""}" style="display:flex;align-items:center;gap:7px" onclick="setEditOp('${op.id}')">${avHtml(op.nome,oi,22)} ${esc(op.nome)}</button>`).join("")}
+    </div>
+  </div>`;
+
+  // Seletor dia
+  h+=`<div class="card card-body" style="margin-bottom:10px">
+    <label class="lbl">Dia da Semana</label>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">
+      ${DIAS_F.map((d,i)=>`<button class="btn-pill${editDia===i?" ativo":""}" onclick="setEditDia(${i})">${d}</button>`).join("")}
+    </div>
+    <label class="lbl">Copiar ${DIAS_F[editDia]} para</label>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      ${DIAS_F.map((d,i)=>i!==editDia?`<button class="btn-sec" style="padding:9px 14px;border-radius:10px;font-size:13px" onclick="copiarDia('${editOp}',${editDia},${i})">${d}</button>`:"").join("")}
+    </div>
+  </div>`;
+
+  if(!editOp)return h;
+  const opAtual=ops.find(o=>o.id===editOp);
+  const opIdx=ops.findIndex(o=>o.id===editOp);
+
+  h+=`<div class="card" style="overflow:hidden;margin-bottom:12px">
+    <div style="background:linear-gradient(90deg,#001E50,#003D8F);padding:12px 16px;display:flex;align-items:center;gap:12px">
+      ${avHtml(opAtual?.nome||"",opIdx,36)}
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff">${esc(opAtual?.nome||"")}</div>
+        <div style="font-family:'Courier New',monospace;font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">${DIAS_F[editDia]} · 15 ciclos</div>
+      </div>
+    </div>
+    <div style="padding:10px 12px">
+      <div style="font-size:11px;font-weight:700;color:#003D8F;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-left:8px;border-left:3px solid #003D8F">Bloco 1 · 15:00–21:00</div>
+      ${CICLOS.map((ciclo,ci)=>{
+        const isDiv=ci===12;
+        const pNum=getPosto(editOp,editDia,ci);
+        const p=pInfo(pNum);
+        const isOver=DB.rotacaoOverride?.[editOp]?.[editDia]?.[ci]!==undefined;
+        const autoNum=gerarRot(opIdx)[editDia][ci];
+        const autoP=pInfo(autoNum);
+        let row="";
+        if(isDiv)row+=`<div style="margin:10px 0">
+          <div style="height:1px;background:#EAECF0;margin-bottom:10px"></div>
+          <div style="background:#FEF3C7;border:1px solid rgba(245,158,11,0.35);border-radius:20px;padding:8px 16px;font-size:13px;color:#92400E;font-weight:700;text-align:center;margin-bottom:10px">🍽 Janta · 21:00 – 22:00</div>
+          <div style="font-size:11px;font-weight:700;color:#00875A;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-left:8px;border-left:3px solid #00875A">Bloco 2 · 22:00–23:45</div>
+        </div>`;
+
+        if(editCiclo===ci){
+          row+=`<div style="background:#fff;border:2px solid #00B0F0;border-radius:14px;padding:16px;margin-bottom:6px">
+            <div style="font-family:'Courier New',monospace;font-size:13px;font-weight:500;color:#003D8F;margin-bottom:12px">${ciclo.label} · ${ciclo.ini}–${ciclo.fim}${ci===14?" (45min)":""}</div>
+            ${isOver?`<button onclick="restaurar('${editOp}',${editDia},${ci})" style="font-size:11px;color:#EA580C;background:#FFF7ED;border:1px solid rgba(234,88,12,0.27);border-radius:8px;padding:4px 10px;margin-bottom:10px;font-weight:600">↺ Restaurar sequência</button>`:``}
+            <div class="posto-grid" id="posto-grid-${ci}">
+              ${getPostos().map((pt,i)=>{const c=corP(i+1);const sel=(editVal??pNum)===i+1;return`<button class="posto-btn" style="border:1.5px solid ${c}${sel?"ff":"44"};background:${sel?c:c+"0d"};color:${sel?"#fff":c}" onclick="setEditVal(${i+1},${ci})">${pt.cod}</button>`;}).join("")}
+            </div>
+            <div style="font-size:11px;color:#4A5060;margin-bottom:10px;background:#F5F6F8;border-radius:8px;padding:6px 10px">Seq. automática: <span style="font-family:'Courier New',monospace;font-weight:600;color:${autoP?.cor}">${autoP?.cod}</span></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-main" style="flex:1" onclick="confirmarEditar(${ci})">✓ Confirmar</button>
+              <button class="btn-sec" style="flex:0.4" onclick="cancelarEditar()">✕</button>
+            </div>
+          </div>`;
+        } else {
+          row+=`<div style="display:flex;align-items:center;gap:10px;background:${ciclo.posJanta?"#F0FAF5":"#F5F6F8"};border:1.5px solid ${isOver?"rgba(234,88,12,0.55)":"#D0D4DC"};border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer" onclick="abrirEditar(${ci})">
+            <div style="font-family:'Courier New',monospace;min-width:34px;font-size:13px;font-weight:500;color:#4A5060">${ciclo.label}</div>
+            <div style="font-family:'Courier New',monospace;font-size:11px;color:#8B919E;min-width:72px">${ciclo.ini}${ci===14?` <span style="color:#00875A">45'</span>`:""}</div>
+            <div style="flex:1;display:flex;align-items:center;gap:7px;background:${p?p.cor+"15":"#EAECF0"};border:1.5px solid ${p?p.cor+"55":"#D0D4DC"};border-radius:8px;padding:4px 10px;min-width:0;overflow:hidden">
+              ${p?`<div style="width:8px;height:8px;border-radius:50%;background:${p.cor};flex-shrink:0"></div>`:""}
+              <span style="font-family:'Courier New',monospace;font-size:12px;font-weight:500;color:${p?p.cor:"#8B919E"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p?p.cod:"—"}</span>
+              ${isOver?`<span style="font-size:10px;color:#EA580C;margin-left:4px;flex-shrink:0">manual</span>`:""}
+            </div>
+            <div style="font-size:18px;color:#8B919E">›</div>
+          </div>`;
+        }
+        return row;
+      }).join("")}
+    </div>
+  </div>
+  <button class="btn-sec" style="border:1px solid rgba(220,38,38,0.35);background:#FEF2F2;color:#DC2626;width:100%" onclick="resetDB()">⚠ Resetar banco de dados</button>`;
+  return h;
+}
+
+// ── SÁBADOS ───────────────────────────────────────────────────────────────────
+function renderSabados(ops){
+  let h=`<div class="sub-tabs">
+    <button class="btn-pill${sabVerAba==="lista"?" ativo":""}" onclick="setSabVerAba('lista')">📅 Datas</button>
+    <button class="btn-pill verde${sabVerAba==="rotativa"?" ativo":""}" onclick="setSabVerAba('rotativa')">✎ Rotativa Sáb.</button>
+  </div>`;
+
+  if(sabVerAba==="lista"){
+    h+=`<div class="card card-body" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:14px">Registrar Sábado de Trabalho</div>
+      <div style="margin-bottom:10px"><label class="lbl">Data</label><input id="sab-data" class="inp" type="date" value="${esc(sabData)}"/></div>
+      <div style="margin-bottom:14px"><label class="lbl">Observação</label><input id="sab-obs" class="inp" type="text" placeholder="Ex: Hora extra — produção Polo" value="${esc(sabObs)}"/></div>
+      <div style="background:#E6F6F0;border:1px solid rgba(0,135,90,0.27);border-radius:9px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#00875A;font-weight:600">🕐 Turno Sábado: 12:00 – 18:00 · 12 ciclos × 30min</div>
+      <button class="btn-main" onclick="addSabado()">+ Adicionar Sábado</button>
+    </div>
+    <div class="card">
+      <div class="card-header">Sábados registrados <span style="font-family:'Courier New',monospace;font-size:12px;color:#8B919E">(${DB.sabados?.length||0})</span></div>
+      <div style="padding:12px">
+        ${!DB.sabados?.length?`<div style="text-align:center;padding:48px;color:#8B919E;font-size:14px">Nenhum sábado registrado</div>`
+        :DB.sabados.map(s=>`<div style="display:flex;align-items:center;gap:12px;background:#F5F6F8;border:1px solid #EAECF0;border-radius:12px;padding:12px 14px;margin-bottom:8px">
+          <div style="background:linear-gradient(135deg,#00875A,#059669);border-radius:10px;padding:8px 10px;text-align:center;flex-shrink:0;min-width:46px">
+            <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:700;color:#fff">${fmtD(s.data).slice(0,2)}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.7)">${fmtD(s.data).slice(3,6).toUpperCase()}</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;color:#1A1E2A">${diaSem(s.data)}, ${fmtD(s.data)}</div>
+            <div style="font-size:11px;color:#00875A;font-weight:600;margin-top:2px">12:00 – 18:00 · 12 ciclos</div>
+            ${s.obs?`<div style="font-size:12px;color:#8B919E;margin-top:1px">${esc(s.obs)}</div>`:""}
+          </div>
+          <button style="background:#FEF2F2;border:1px solid rgba(220,38,38,0.27);border-radius:9px;padding:10px 12px;color:#DC2626;font-size:14px;font-weight:600;flex-shrink:0" onclick="delSabado(${s.id})">✕</button>
+        </div>`).join("")}
+      </div>
+    </div>`;
+  } else {
+    h+=`<div style="background:#E6F6F0;border:1px solid rgba(0,135,90,0.27);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#00875A">✎ Rotativa específica para sábados (12h–18h · 12 ciclos)</div>
+    <div class="card card-body" style="margin-bottom:10px">
+      <label class="lbl">Operador</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        ${ops.map((op,oi)=>`<button class="btn-pill verde${editSabOp===op.id?" ativo":""}" style="display:flex;align-items:center;gap:7px" onclick="setEditSabOp('${op.id}')">${avHtml(op.nome,oi,22)} ${esc(op.nome)}</button>`).join("")}
+      </div>
+    </div>`;
+
+    if(editSabOp){
+      const sabOpIdx=ops.findIndex(o=>o.id===editSabOp);
+      h+=`<div class="card" style="overflow:hidden">
+        <div style="background:linear-gradient(90deg,#00875A,#059669);padding:12px 16px;display:flex;align-items:center;gap:12px">
+          ${avHtml(ops.find(o=>o.id===editSabOp)?.nome||"",sabOpIdx,36)}
+          <div style="font-size:15px;font-weight:700;color:#fff">${esc(ops.find(o=>o.id===editSabOp)?.nome||"")}</div>
+        </div>
+        <div style="padding:10px 12px">
+          ${CICLOS_SAB.map((ciclo,ci)=>{
+            const pNum=getPostoSab(editSabOp,ci);const p=pInfo(pNum);const isOpen=editSabCiclo===ci;
+            if(isOpen)return`<div style="background:#fff;border:2px solid #00875A;border-radius:14px;padding:16px;margin-bottom:6px">
+              <div style="font-family:'Courier New',monospace;font-size:13px;color:#00875A;margin-bottom:12px">${ciclo.label} · ${ciclo.ini}–${ciclo.fim}</div>
+              <div class="posto-grid" id="sab-posto-grid-${ci}">
+                ${getPostos().map((pt,i)=>{const c=corP(i+1);const sel=(editSabVal??pNum)===i+1;return`<button class="posto-btn" style="border:1.5px solid ${c}${sel?"ff":"44"};background:${sel?c:c+"0d"};color:${sel?"#fff":c}" onclick="setSabVal(${i+1},${ci})">${pt.cod}</button>`;}).join("")}
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-main" style="flex:1;background:linear-gradient(90deg,#00875A,#059669)" onclick="confirmarSab(${ci})">✓ Confirmar</button>
+                <button class="btn-sec" style="flex:0.4" onclick="cancelarSab()">✕</button>
+              </div>
+            </div>`;
+            return`<div style="display:flex;align-items:center;gap:10px;background:#F5F6F8;border:1.5px solid #D0D4DC;border-radius:12px;padding:12px 14px;margin-bottom:6px;cursor:pointer" onclick="abrirSab(${ci})">
+              <div style="font-family:'Courier New',monospace;min-width:34px;font-size:13px;color:#4A5060">${ciclo.label}</div>
+              <div style="font-family:'Courier New',monospace;font-size:11px;color:#8B919E;min-width:90px">${ciclo.ini}–${ciclo.fim}</div>
+              <div style="flex:1;display:flex;align-items:center;gap:7px;background:${p?p.cor+"15":"#EAECF0"};border:1.5px solid ${p?p.cor+"55":"#D0D4DC"};border-radius:8px;padding:4px 10px">
+                <span style="font-family:'Courier New',monospace;font-size:12px;font-weight:500;color:${p?p.cor:"#8B919E"}">${p?p.cod:"—"}</span>
+              </div>
+              <div style="font-size:18px;color:#8B919E">›</div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+    }
+  }
+  return h;
+}
+
+// ── FALTAS ────────────────────────────────────────────────────────────────────
+function renderFaltas(ops){
+  const filtradas=(DB.faltas||[]).filter(f=>fFiltro==="todos"?true:f.opId===fFiltro);
+  let h=`<div class="card card-body" style="margin-bottom:16px">
+    <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:14px">Registrar Ausência</div>
+    <div style="margin-bottom:10px">
+      <label class="lbl">Operador</label>
+      <select id="f-op" class="inp">
+        ${ops.map(op=>`<option value="${op.id}"${fOp===op.id?" selected":""}>${esc(op.nome)}</option>`).join("")}
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div style="flex:1"><label class="lbl">Data</label><input id="f-data" class="inp" type="date" value="${esc(fData)}"/></div>
+      <div style="flex:1"><label class="lbl">Tipo</label>
+        <select id="f-tipo" class="inp">
+          ${Object.entries(TIPO_FALTA).map(([k,v])=>`<option value="${k}"${fTipo===k?" selected":""}>${v.label}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:14px"><label class="lbl">Observação</label><input id="f-obs" class="inp" type="text" placeholder="Opcional" value="${esc(fObs)}"/></div>
+    <button class="btn-main" onclick="addFalta()">+ Registrar Ausência</button>
+  </div>
+  <div class="scroll-pills">
+    <button class="btn-pill${fFiltro==="todos"?" ativo":""}" onclick="setFFiltro('todos')">Todos (${DB.faltas?.length||0})</button>
+    ${ops.map((op,oi)=>{const n=DB.faltas?.filter(f=>f.opId===op.id).length||0;return n?`<button class="btn-pill${fFiltro===op.id?" ativo":""}" style="display:flex;align-items:center;gap:6px" onclick="setFFiltro('${op.id}')">${avHtml(op.nome,oi,20)} ${esc(op.nome)} (${n})</button>`:"";}).join("")}
+  </div>
+  <div class="card">
+    <div class="card-header">Ocorrências <span style="font-family:'Courier New',monospace;font-size:12px;color:#8B919E">(${filtradas.length})</span></div>
+    <div style="padding:12px">
+      ${filtradas.length===0?`<div style="text-align:center;padding:48px;color:#8B919E;font-size:14px">Nenhuma ocorrência</div>`
+      :filtradas.map(f=>{const op=ops.find(o=>o.id===f.opId),oi=ops.findIndex(o=>o.id===f.opId),tipo=TIPO_FALTA[f.tipo]||TIPO_FALTA.falta;return`<div style="display:flex;align-items:center;gap:12px;background:#F5F6F8;border:1px solid #EAECF0;border-radius:12px;padding:12px 14px;margin-bottom:8px">
+        ${avHtml(op?.nome||"?",oi,36)}
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
+            <span style="font-size:14px;font-weight:600;color:#1A1E2A">${esc(op?.nome)}</span>
+            <span style="background:${tipo.bg};color:${tipo.cor};border-radius:10px;padding:2px 9px;font-size:11px;font-weight:600;flex-shrink:0">${tipo.label}</span>
+          </div>
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:#8B919E">${diaSem(f.data)}, ${fmtD(f.data)}${f.obs?` · ${esc(f.obs)}`:""}</div>
+        </div>
+        <button style="background:#FEF2F2;border:1px solid rgba(220,38,38,0.27);border-radius:9px;padding:10px 10px;color:#DC2626;font-size:14px;font-weight:600;flex-shrink:0" onclick="delFalta(${f.id})">✕</button>
+      </div>`;}).join("")}
+    </div>
+  </div>`;
+  return h;
+}
+
+// ── POSTOS E SEQUÊNCIA ────────────────────────────────────────────────────────
+function renderPostos(){
+  const P=getPostos();
+  const S=getSeq();
+  let h=`<div class="sub-tabs">
+    <button class="btn-pill${postosAba==="lista"?" ativo":""}" onclick="setPostosAba('lista')">🔧 Postos (${P.length})</button>
+    <button class="btn-pill${postosAba==="seq"?" ativo":""}" style="background:${postosAba==="seq"?"#003D8F":""};" onclick="setPostosAba('seq')">🔄 Sequência</button>
+  </div>`;
+
+  if(postosAba==="lista"){
+    // Formulário cadastro posto
+    h+=`<div class="card card-body" style="margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;margin-bottom:16px">Cadastrar Posto / Operação</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="flex:0.4">
+          <label class="lbl">Código</label>
+          <input id="inp-pcod" class="inp inp-mono" type="text" placeholder="Ex: OP-01" maxlength="10" autocomplete="off" autocapitalize="characters" value="${esc(novoCod)}"/>
+        </div>
+        <div style="flex:1">
+          <label class="lbl">Operação / Descrição</label>
+          <input id="inp-pdesc" class="inp" type="text" placeholder="Ex: Eixo Traseiro" maxlength="60" autocomplete="off" value="${esc(novaDesc)}"/>
+        </div>
+      </div>
+      <button class="btn-main" onclick="addPosto()">+ Cadastrar Posto</button>
+    </div>
+
+    <!-- Lista de postos -->
+    <div class="card">
+      <div class="card-header">
+        Postos cadastrados
+        <span style="font-family:'Courier New',monospace;font-size:12px;color:#8B919E"> (${P.length})</span>
+      </div>
+      <div style="padding:12px">
+        ${P.length===0?`<div style="text-align:center;padding:48px;color:#8B919E;font-size:14px">Nenhum posto cadastrado</div>`:
+        `<table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:#F5F6F8">
+              <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0;width:40px">#</th>
+              <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0;width:90px">CÓDIGO</th>
+              <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0">OPERAÇÃO</th>
+              <th style="padding:8px 10px;border-bottom:1px solid #EAECF0;width:40px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${P.map((p,i)=>{const c=corP(i+1);return`<tr style="border-bottom:1px solid #EAECF0">
+              <td style="padding:8px 10px;font-family:'Courier New',monospace;font-size:11px;color:#8B919E">${i+1}</td>
+              <td style="padding:8px 10px">
+                <span style="background:${c}18;border:1px solid ${c}55;border-radius:6px;padding:3px 8px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:${c}">${esc(p.cod)}</span>
+              </td>
+              <td style="padding:8px 10px;font-size:13px;color:#1A1E2A">${esc(p.desc)}</td>
+              <td style="padding:8px 10px;text-align:right">
+                <button style="background:#FEF2F2;border:1px solid rgba(220,38,38,0.27);border-radius:7px;padding:5px 8px;color:#DC2626;font-size:12px;font-weight:600" onclick="delPosto(${i})">✕</button>
+              </td>
+            </tr>`;}).join("")}
+          </tbody>
+        </table>`}
+      </div>
+      ${P.length>0?`<div style="padding:0 12px 12px;display:flex;justify-content:flex-end">
+        <button onclick="resetSeqPostos()" style="font-size:11px;color:#EA580C;background:#FFF7ED;border:1px solid rgba(234,88,12,0.27);border-radius:8px;padding:5px 12px;font-weight:600">↺ Restaurar postos padrão</button>
+      </div>`:""}
+    </div>`;
+  }
+
+  if(postosAba==="seq"){
+    const seqAtual=seqTemp||S;
+    h+=`<div style="background:#E8F4FB;border:1px solid rgba(0,176,240,0.27);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#003D8F">
+      🔄 A sequência define em qual ordem os operadores passam pelos postos. Cada número corresponde ao nº da linha na lista de postos acima.
+    </div>
+
+    <!-- Sequência atual visual -->
+    <div class="card card-body" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#1A1E2A;margin-bottom:10px">Sequência atual (${seqAtual.length} posições)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+        ${seqAtual.map((n,i)=>{const p=pInfo(n);return`<div style="display:flex;align-items:center;gap:4px;background:${p?p.cor+"15":"#F5F6F8"};border:1.5px solid ${p?p.cor+"44":"#D0D4DC"};border-radius:8px;padding:4px 8px;position:relative">
+          <span style="font-size:9px;color:#8B919E;font-family:'Courier New',monospace">${i+1}.</span>
+          <span style="font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:${p?p.cor:"#8B919E"}">${p?p.cod:"?"}</span>
+          ${seqTemp!==null?`<button onclick="remDaSeq(${i})" style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:none;color:#fff;font-size:8px;font-weight:700;line-height:1;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>`:""}
+        </div>`;}).join("")}
+      </div>
+      ${seqTemp===null?`<button class="btn-main" style="background:linear-gradient(90deg,#003D8F,#0057B8)" onclick="iniciarEditarSeq()">✎ Editar sequência</button>`:
+      `<div>
+        <div style="font-size:12px;font-weight:600;color:#4A5060;margin-bottom:8px">Adicionar posto à sequência:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+          ${P.map((p,i)=>{const c=corP(i+1);return`<button onclick="addNaSeq(${i+1})" style="padding:5px 10px;border-radius:8px;border:1.5px solid ${c}55;background:${c}0d;color:${c};font-family:'Courier New',monospace;font-weight:600;font-size:11px;cursor:pointer">${p.cod}</button>`;}).join("")}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-main" style="flex:1" onclick="salvarSeq()">✓ Salvar sequência</button>
+          <button class="btn-sec" style="flex:0.4" onclick="cancelarSeq()">Cancelar</button>
+        </div>
+      </div>`}
+    </div>
+
+    <!-- Tabela de referência -->
+    <div class="card">
+      <div class="card-header">Referência · Número → Posto</div>
+      <div style="padding:12px">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#F5F6F8">
+            <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0;width:40px">Nº</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0;width:90px">CÓDIGO</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:#8B919E;letter-spacing:1px;border-bottom:1px solid #EAECF0">OPERAÇÃO</th>
+          </tr></thead>
+          <tbody>
+            ${P.map((p,i)=>{const c=corP(i+1);return`<tr style="border-bottom:1px solid #EAECF0">
+              <td style="padding:7px 10px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:${c}">${i+1}</td>
+              <td style="padding:7px 10px"><span style="background:${c}18;border:1px solid ${c}55;border-radius:6px;padding:3px 8px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:${c}">${esc(p.cod)}</span></td>
+              <td style="padding:7px 10px;font-size:13px;color:#1A1E2A">${esc(p.desc)}</td>
+            </tr>`;}).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  return h;
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────────────────────
+function renderHist(){
+  const hist=DB.historico||[];
+  const filtrado=hFiltro==="todos"?hist:hist.filter(h=>h.acao.includes(hFiltro==="rotacao"?"posto":hFiltro==="sabados"?"Sábado":hFiltro==="faltas"?"Ausência":"Operador"));
+  return`<div class="scroll-pills" style="margin-bottom:14px">
+    ${[{k:"todos",l:`Todos (${hist.length})`},{k:"rotacao",l:"Rotação"},{k:"sabados",l:"Sábados"},{k:"faltas",l:"Ausências"},{k:"ops",l:"Equipe"}].map(({k,l})=>`<button class="btn-pill${hFiltro===k?" ativo":""}" onclick="setHFiltro('${k}')">${l}</button>`).join("")}
+  </div>
+  <div class="card">
+    ${filtrado.length===0?`<div style="text-align:center;padding:60px;color:#8B919E;font-size:14px">Nenhum registro</div>`
+    :filtrado.map((h,i)=>{const cor=h.acao.includes("posto")?"#EA580C":h.acao.includes("Sábado")?"#00875A":h.acao.includes("Ausência")?"#DC2626":"#003D8F";const icon=h.acao.includes("posto")?"✎":h.acao.includes("Sábado")?"📅":h.acao.includes("Ausência")?"👤":"👥";return`<div style="display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-bottom:${i<filtrado.length-1?"1px solid #EAECF0":"none"}">
+      <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;background:${cor}18;border:1px solid ${cor}44;display:flex;align-items:center;justify-content:center;font-size:14px;color:${cor}">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1A1E2A;margin-bottom:2px">${esc(h.acao)}</div>
+        <div style="font-size:12px;color:#4A5060;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.detalhe||"")}</div>
+        <div style="font-family:'Courier New',monospace;font-size:10px;color:#8B919E;margin-top:3px">${fmtTS(h.ts)}</div>
+      </div>
+    </div>`;}).join("")}
+  </div>`;
+}
+
+// ── MÊS ───────────────────────────────────────────────────────────────────────
+function renderMes(ops){
+  const hoje=new Date();
+  const nomeMes=new Date(mesAno,mesMes,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const total=new Date(mesAno,mesMes+1,0).getDate();
+  const diasDoMes=[];
+  for(let d=1;d<=total;d++){const dt=new Date(mesAno,mesMes,d),dow=dt.getDay(),iso=`${mesAno}-${String(mesMes+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;diasDoMes.push({d,dow,iso,diaIdx:dow===0||dow===6?null:dow-1,isSab:dow===6,isSabTrab:dow===6&&DB.sabados?.some(s=>s.data===iso),isDom:dow===0});}
+  const offset=diasDoMes[0]?.dow===0?6:diasDoMes[0]?.dow-1;
+  const opsEx=opFiltroMes==="todos"?ops:ops.filter(o=>o.id===opFiltroMes);
+
+  let h=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="navMes(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid #D0D4DC;background:#fff;font-size:18px;display:flex;align-items:center;justify-content:center">‹</button>
+      <div style="font-size:15px;font-weight:700;color:#1A1E2A;text-transform:capitalize;min-width:160px;text-align:center">${nomeMes}</div>
+      <button onclick="navMes(1)" style="width:36px;height:36px;border-radius:50%;border:1px solid #D0D4DC;background:#fff;font-size:18px;display:flex;align-items:center;justify-content:center">›</button>
+    </div>
+    <button onclick="exportPDF()" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:10px;border:none;background:linear-gradient(90deg,#001E50,#003D8F);color:#fff;font-weight:700;font-size:14px;box-shadow:0 2px 8px rgba(0,21,80,0.25)">📄 Exportar PDF</button>
+  </div>
+  <div class="scroll-pills" style="margin-bottom:14px">
+    <button class="btn-pill${opFiltroMes==="todos"?" ativo":""}" onclick="setOpFiltroMes('todos')">Todos</button>
+    ${ops.map((op,oi)=>`<button class="btn-pill${opFiltroMes===op.id?" ativo":""}" style="display:flex;align-items:center;gap:6px" onclick="setOpFiltroMes('${op.id}')">${avHtml(op.nome,oi,20)} ${esc(op.nome)}</button>`).join("")}
+  </div>
+  <div id="mes-pdf">
+    <div style="font-size:12px;font-weight:700;color:#003D8F;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">Rotativa — ${nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1)} · Fahrwerk B-OTM-4</div>
+    <div class="mes-grid" style="margin-bottom:3px">
+      ${["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"].map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:${d==="Sáb"?"#00875A":d==="Dom"?"#DC2626":"#003D8F"};padding:4px 0">${d}</div>`).join("")}
+    </div>
+    <div class="mes-grid">
+      ${Array.from({length:offset},(_,i)=>`<div key="v${i}"></div>`).join("")}
+      ${diasDoMes.map(({d,iso,diaIdx,isSab,isSabTrab,isDom})=>{
+        const isFim=isDom||(isSab&&!isSabTrab);
+        const isHoje=iso===hoje.toISOString().slice(0,10);
+        const isDetalhe=diaDetalhe?.iso===iso;
+        const hasFalta=opsEx.some(op=>DB.faltas?.some(f=>f.opId===op.id&&f.data===iso));
+        let cls="mes-dia";
+        if(isFim)cls+=" fim";else if(isSabTrab)cls+=" sab-trab";
+        if(isHoje)cls+=" hoje";
+        if(isDetalhe)cls+=" detalhe";
+        let numCls="mes-dia-num";
+        if(isHoje)numCls+=" hoje-n";else if(isSabTrab)numCls+=" sab-n";else if(isFim)numCls+=" fim-n";
+
+        let inner=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="${numCls}">${d}</div>
+          ${isSabTrab?`<span style="font-size:8px;color:#00875A;font-weight:700">SAB</span>`:""}
+          ${hasFalta&&!isFim?`<div style="width:6px;height:6px;border-radius:50%;background:#DC2626"></div>`:""}
+        </div>`;
+
+        if(!isFim){
+          if(opFiltroMes==="todos"){
+            // Modo resumido: bolinha colorida por operador (1 posto = C1)
+            inner+=`<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">`;
+            opsEx.forEach(op=>{
+              const falta=DB.faltas?.find(f=>f.opId===op.id&&f.data===iso);
+              if(falta){
+                const tf=TIPO_FALTA[falta.tipo];
+                inner+=`<div title="${ini(op.nome)}" style="width:13px;height:13px;border-radius:3px;background:${tf?.bg};border:1px solid ${tf?.cor}88;font-size:6px;font-weight:700;color:${tf?.cor};display:flex;align-items:center;justify-content:center">${tf?.label.slice(0,1)}</div>`;
+              } else {
+                const pNum=isSabTrab?getPostoSab(op.id,0):getPosto(op.id,diaIdx,0);
+                const p=pInfo(pNum);
+                if(p)inner+=`<div title="${ini(op.nome)}: ${p.cod}" style="width:13px;height:13px;border-radius:3px;background:${p.cor}33;border:1px solid ${p.cor}77;font-size:6px;font-weight:700;color:${p.cor};display:flex;align-items:center;justify-content:center;overflow:hidden">${p.cod.replace(/[^0-9]/g,"").slice(-2)}</div>`;
+              }
+            });
+            inner+=`</div><div style="font-size:7px;color:#8B919E;margin-top:2px">toque para ver</div>`;
+          } else {
+            // 1 operador selecionado: mostra 4 ciclos
+            const op=opsEx[0];
+            if(op){
+              const falta=DB.faltas?.find(f=>f.opId===op.id&&f.data===iso);
+              if(falta){
+                const tf=TIPO_FALTA[falta.tipo];
+                inner+=`<div style="font-size:9px;font-weight:700;color:${tf?.cor};background:${tf?.bg};border-radius:4px;padding:2px 5px;margin-top:2px">${tf?.label}</div>`;
+              } else {
+                const postos=isSabTrab?Array.from({length:4},(_,c)=>getPostoSab(op.id,c)):Array.from({length:4},(_,c)=>getPosto(op.id,diaIdx,c));
+                inner+=`<div style="display:flex;flex-direction:column;gap:2px;margin-top:2px">`;
+                postos.forEach((pNum,ci)=>{const p=pInfo(pNum);if(p)inner+=`<span style="font-family:'Courier New',monospace;font-size:8px;font-weight:700;color:${p.cor};background:${p.cor}18;border:1px solid ${p.cor}44;border-radius:3px;padding:1px 4px">C${ci+1} ${p.cod}</span>`;});
+                inner+=`</div><div style="font-size:7px;color:#8B919E;margin-top:1px">+${(isSabTrab?12:15)-4} ciclos</div>`;
+              }
+            }
+          }
+        }
+
+        const onclick=isFim?"":"onclick=\"toggleDiaDetalhe('"+iso+"',"+JSON.stringify(diaIdx)+","+isSabTrab+")\"";
+        return`<div class="${cls}" ${onclick}>${inner}</div>`;
+      }).join("")}
+    </div>
+  </div>`;
+
+  if(diaDetalhe){
+    const ciclosList=diaDetalhe.isSabTrab?CICLOS_SAB:CICLOS;
+    h+=`<div class="card" style="margin-top:16px;overflow:hidden">
+      <div style="background:linear-gradient(90deg,#001E50,#003D8F);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">${diaDetalhe.isSabTrab?"Sábado":"Dia"} ${fmtD(diaDetalhe.iso)}</div>
+          <div style="font-family:'Courier New',monospace;font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px">${diaDetalhe.isSabTrab?"12:00–18:00 · 12 ciclos":"15:00–23:45 · 15 ciclos"}</div>
+        </div>
+        <button onclick="toggleDiaDetalhe(null)" style="background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:32px;height:32px;color:#fff;font-size:16px">✕</button>
+      </div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:12px">
+        <table style="border-collapse:separate;border-spacing:3px 3px;min-width:${diaDetalhe.isSabTrab?400:700}px">
+          <thead><tr>
+            <th style="font-family:'Courier New',monospace;background:#F5F6F8;padding:6px 8px;border-radius:6px;font-size:10px;color:#8B919E;font-weight:600;text-align:left;white-space:nowrap;min-width:110px">Operador</th>
+            ${ciclosList.map(c=>`<th style="font-family:'Courier New',monospace;background:${c.posJanta?"#F0FAF5":diaDetalhe.isSabTrab?"#E6F6F0":"#F5F6F8"};padding:5px 4px;border-radius:5px;font-size:9px;color:${c.posJanta?"#00875A":"#8B919E"};font-weight:600;text-align:center;white-space:nowrap;min-width:50px">${c.label}<br/>${c.ini}</th>`).join("")}
+          </tr></thead>
+          <tbody>
+            ${opsEx.map(op=>{
+              const oi=ops.findIndex(o=>o.id===op.id);
+              const falta=DB.faltas?.find(f=>f.opId===op.id&&f.data===diaDetalhe.iso);
+              return`<tr>
+                <td style="background:${falta?"#FEF2F2":"#F5F6F8"};border-radius:6px;padding:6px 8px">
+                  <div style="display:flex;align-items:center;gap:6px">${avHtml(op.nome,oi,22)}<span style="font-size:12px;font-weight:600;color:#1A1E2A">${esc(op.nome)}</span></div>
+                </td>
+                ${ciclosList.map((_,ci)=>{
+                  if(falta)return`<td style="padding:2px"><div style="background:${TIPO_FALTA[falta.tipo]?.bg};border:1px solid ${TIPO_FALTA[falta.tipo]?.cor}44;border-radius:5px;padding:5px 3px;text-align:center;font-family:'Courier New',monospace;font-size:9px;color:${TIPO_FALTA[falta.tipo]?.cor};font-weight:700">${TIPO_FALTA[falta.tipo]?.label.slice(0,3)}</td>`;
+                  const pNum=diaDetalhe.isSabTrab?getPostoSab(op.id,ci):getPosto(op.id,diaDetalhe.diaIdx,ci);
+                  const p=pInfo(pNum);
+                  return`<td style="padding:2px"><div style="background:${p?p.cor+"18":"#F5F6F8"};border:1.5px solid ${p?p.cor+"44":"#D0D4DC"};border-radius:5px;padding:5px 3px;text-align:center"><div style="font-family:'Courier New',monospace;font-size:10px;font-weight:600;color:${p?p.cor:"#D0D4DC"}">${p?p.cod:"—"}</div></td>`;
+                }).join("")}
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  return h;
+}
+
+// ── MODAL DETALHE ─────────────────────────────────────────────────────────────
+function abrirModal(opId,opIdx,diaIdx,cicloIdx,postoNum){
+  const p=pInfo(postoNum),op=getOps().find(o=>o.id===opId),ciclo=CICLOS[cicloIdx];
+  const isOver=DB.rotacaoOverride?.[opId]?.[diaIdx]?.[cicloIdx]!==undefined;
+  const autoNum=gerarRot(opIdx)[diaIdx][cicloIdx],autoP=pInfo(autoNum);
+  document.getElementById("modal-body").innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:50px;height:50px;border-radius:12px;flex-shrink:0;background:${p?p.cor+"18":"#F5F6F8"};border:2px solid ${p?p.cor+"66":"#D0D4DC"};display:flex;align-items:center;justify-content:center">
+        <span style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:${p?.cor||"#8B919E"}">${p?.cod||"—"}</span>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;color:#1A1E2A">${esc(p?.desc||"—")}</div>
+        <div style="font-size:12px;color:#8B919E;margin-top:2px">${ciclo?.label} · ${ciclo?.ini}–${ciclo?.fim}${cicloIdx===14?` <span style="color:#00875A;font-weight:600">· 45min</span>`:""}</div>
+        ${isOver?`<div style="font-size:11px;color:#EA580C;font-weight:600;margin-top:2px">⚡ Manual · automático: ${autoP?.cod}</div>`:""}
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#F5F6F8;border-radius:12px;padding:12px 14px;margin-bottom:16px">
+      ${avHtml(op?.nome||"?",opIdx,42)}
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#1A1E2A">${esc(op?.nome)}</div>
+        <div style="font-family:'Courier New',monospace;font-size:11px;color:#8B919E">${op?.id} · ${DIAS_F[diaIdx]}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-main" style="flex:1" onclick="irParaEditor('${opId}',${diaIdx},${cicloIdx},${postoNum})">✎ Ajustar este ciclo</button>
+      <button class="btn-sec" style="flex:0.45" onclick="fecharModal()">Fechar</button>
+    </div>`;
+  document.getElementById("modal-overlay").classList.add("aberto");
+}
+
+function fecharModal(){document.getElementById("modal-overlay").classList.remove("aberto");}
+
+// ── BIND EVENTS ───────────────────────────────────────────────────────────────
+function bindEvents(){
+  // Inputs equipe
+  const inpNome=document.getElementById("inp-nome");
+  if(inpNome){inpNome.addEventListener("input",function(){novoNome=this.value.slice(0,40);document.getElementById("cnt-nome").textContent=novoNome.length+"/40";});inpNome.addEventListener("keydown",function(e){if(e.key==="Enter")addOperador();});}
+  const inpReg=document.getElementById("inp-reg");
+  if(inpReg){inpReg.addEventListener("input",function(){novoId=this.value.replace(/\D/g,"").slice(0,7);this.value=novoId;const c=document.getElementById("cnt-reg");c.textContent=novoId.length+"/7";c.style.color=novoId.length===7?"#00875A":"#8B919E";});inpReg.addEventListener("keydown",function(e){if(e.key==="Enter")addOperador();});}
+  // Inputs sábados
+  const sd=document.getElementById("sab-data");if(sd)sd.addEventListener("input",function(){sabData=this.value;});
+  const so=document.getElementById("sab-obs");if(so)so.addEventListener("input",function(){sabObs=this.value;});
+  // Inputs faltas
+  const fo=document.getElementById("f-op");if(fo)fo.addEventListener("change",function(){fOp=this.value;});
+  const fd=document.getElementById("f-data");if(fd)fd.addEventListener("input",function(){fData=this.value;});
+  const ft=document.getElementById("f-tipo");if(ft)ft.addEventListener("change",function(){fTipo=this.value;});
+  const fob=document.getElementById("f-obs");if(fob)fob.addEventListener("input",function(){fObs=this.value;});
+  // Postos
+  bindPostosEvents();
+}
+
+// ── AÇÕES ─────────────────────────────────────────────────────────────────────
+function setAba(k){ABA=k;render();}
+function setDia(i){DIA=i;render();}
+function setOpAba(k){opAba=k;render();}
+function setEditOp(id){editOp=id;editCiclo=null;render();}
+function setEditDia(i){editDia=i;editCiclo=null;render();}
+function setEditSabOp(id){editSabOp=id;editSabCiclo=null;render();}
+function setSabVerAba(k){sabVerAba=k;render();}
+function setFFiltro(v){fFiltro=v;render();}
+function setHFiltro(v){hFiltro=v;render();}
+function setOpFiltroMes(v){opFiltroMes=v;render();}
+function navMes(d){mesMes+=d;if(mesMes<0){mesMes=11;mesAno--;}if(mesMes>11){mesMes=0;mesAno++;}diaDetalhe=null;render();}
+function toggleDiaDetalhe(iso,diaIdx,isSabTrab){if(!iso||diaDetalhe?.iso===iso){diaDetalhe=null;}else{diaDetalhe={iso,diaIdx,isSabTrab};}render();}
+function abrirEditar(ci){editCiclo=ci;editVal=getPosto(editOp,editDia,ci);render();}
+function cancelarEditar(){editCiclo=null;editVal=null;render();}
+function setEditVal(v,ci){editVal=v;const grid=document.getElementById("posto-grid-"+ci);if(grid)grid.querySelectorAll(".posto-btn").forEach((b,i)=>{const c=corP(i+1);const sel=v===i+1;b.style.border=`1.5px solid ${c}${sel?"ff":"44"}`;b.style.background=sel?c:c+"0d";b.style.color=sel?"#fff":c;});}
+function confirmarEditar(ci){
+  const ant=pInfo(getPosto(editOp,editDia,ci)),nv=pInfo(editVal||1);
+  if(!DB.rotacaoOverride)DB.rotacaoOverride={};
+  if(!DB.rotacaoOverride[editOp])DB.rotacaoOverride[editOp]={};
+  if(!DB.rotacaoOverride[editOp][editDia])DB.rotacaoOverride[editOp][editDia]={};
+  DB.rotacaoOverride[editOp][editDia][ci]=editVal;
+  const op=getOps().find(o=>o.id===editOp);
+  DB=logH(DB,"Ajuste manual",`${op?.nome} · ${DIAS_F[editDia]} · C${ci+1}: ${ant?.cod||"—"} → ${nv?.cod||"—"}`);
+  saveDB();editCiclo=null;editVal=null;toast("Ajuste salvo ✓");render();
+}
+function restaurar(opId,dIdx,cIdx){
+  if(DB.rotacaoOverride?.[opId]?.[dIdx])delete DB.rotacaoOverride[opId][dIdx][cIdx];
+  const op=getOps().find(o=>o.id===opId);
+  DB=logH(DB,"Posto restaurado",`${op?.nome} · C${cIdx+1}`);
+  saveDB();editCiclo=null;editVal=null;toast("Restaurado ✓");render();
+}
+function copiarDia(opId,orig,dest){
+  if(!DB.rotacaoOverride)DB.rotacaoOverride={};
+  if(!DB.rotacaoOverride[opId])DB.rotacaoOverride[opId]={};
+  DB.rotacaoOverride[opId][dest]={};
+  const opIdx=getOps().findIndex(o=>o.id===opId);
+  for(let c=0;c<15;c++)DB.rotacaoOverride[opId][dest][c]=getPosto(opId,orig,c);
+  const op=getOps().find(o=>o.id===opId);
+  DB=logH(DB,"Cópia de dia",`${op?.nome}: ${DIAS_F[orig]} → ${DIAS_F[dest]}`);
+  saveDB();toast(`Copiado para ${DIAS_F[dest]}`);render();
+}
+function abrirSab(ci){editSabCiclo=ci;editSabVal=getPostoSab(editSabOp,ci);render();}
+function cancelarSab(){editSabCiclo=null;editSabVal=null;render();}
+function setSabVal(v,ci){editSabVal=v;const grid=document.getElementById("sab-posto-grid-"+ci);if(grid)grid.querySelectorAll(".posto-btn").forEach((b,i)=>{const c=corP(i+1);const sel=v===i+1;b.style.border=`1.5px solid ${c}${sel?"ff":"44"}`;b.style.background=sel?c:c+"0d";b.style.color=sel?"#fff":c;});}
+function confirmarSab(ci){
+  if(!DB.rotacaoSab)DB.rotacaoSab={};
+  if(!DB.rotacaoSab[editSabOp]){const oi=getOps().findIndex(o=>o.id===editSabOp);const _s=getSeq();DB.rotacaoSab[editSabOp]=Array.from({length:12},(_,c)=>_s[(oi+c)%_s.length]);}
+  DB.rotacaoSab[editSabOp][ci]=editSabVal;
+  const op=getOps().find(o=>o.id===editSabOp);
+  DB=logH(DB,"Sábado ajuste",`${op?.nome} · C${ci+1}: ${pInfo(editSabVal)?.cod}`);
+  saveDB();editSabCiclo=null;editSabVal=null;toast("Salvo ✓");render();
+}
+function travarOp(){
+  const selOp=document.getElementById("trav-op");
+  const selPosto=document.getElementById("trav-posto");
+  if(!selOp||!selPosto){toast("Erro: formulário não encontrado","warn");return;}
+  const opId=selOp.value;
+  const postoNum=parseInt(selPosto.value||"0");
+  if(!opId){toast("Selecione o operador","warn");return;}
+  if(!postoNum||isNaN(postoNum)){toast("Selecione o posto","warn");return;}
+  const op=getOps().find(o=>o.id===opId);
+  const p=pInfo(postoNum);
+  if(!p){toast("Posto inválido","warn");return;}
+  if(!DB.travados)DB.travados={};
+  if(DB.travados[opId]!==undefined){
+    const antP=pInfo(DB.travados[opId]);
+    if(!confirm(op?.nome+" já está travado em "+antP?.cod+". Substituir por "+p?.cod+"?"))return;
+  }
+  DB.travados[opId]=postoNum;
+  DB=logH(DB,"Operador travado",op?.nome+" → "+p?.cod+" — "+p?.desc);
+  saveDB();
+  toast(op?.nome+" travado em "+p?.cod+" ✓");
+  render();
+}
+function destravarOp(opId){
+  const op=getOps().find(o=>o.id===opId);
+  if(!confirm("Destravar "+op?.nome+"? Ele voltará à rotação automática."))return;
+  if(DB.travados)delete DB.travados[opId];
+  DB=logH(DB,"Operador destravado",(op?.nome||opId)+" voltou à rotação");
+  saveDB();
+  toast((op?.nome||opId)+" destravado ✓");
+  render();
+}
+
+function addOperador(){
+  const nome=novoNome.trim();
+  if(!nome){toast("Digite o nome","warn");return;}
+  if(novoId&&novoId.length>0&&novoId.length<7){toast("Registro deve ter 7 dígitos","warn");return;}
+  const id=novoId.trim()||`OP${Date.now()}`;
+  if(DB.operadores?.find(o=>o.id===id)){toast("ID já existe","warn");return;}
+  DB.operadores=[...(DB.operadores||[]),{id,nome}];
+  DB=logH(DB,"Operador adicionado",`${nome} · ID ${id}`);
+  saveDB();novoNome="";novoId="";opAba="lista";toast(`${nome} cadastrado ✓`);render();
+}
+function moverOp(opId, dir){
+  const ops=getOps();
+  const idx=ops.findIndex(o=>o.id===opId);
+  const novoIdx=idx+dir;
+  if(novoIdx<0||novoIdx>=ops.length)return;
+  // Trocar posições
+  const nova=[...ops];
+  [nova[idx],nova[novoIdx]]=[nova[novoIdx],nova[idx]];
+  DB.operadores=nova;
+  DB=logH(DB,"Reordenação de equipe",`${ops[idx].nome} ${dir<0?"subiu":"desceu"} (offset ${idx} → ${novoIdx})`);
+  saveDB();
+  render();
+}
+
+function removerOp(opId){
+  const op=getOps().find(o=>o.id===opId);
+  if(!confirm(`Remover ${op?.nome}?`))return;
+  DB.operadores=DB.operadores.filter(o=>o.id!==opId);
+  if(DB.rotacaoOverride)delete DB.rotacaoOverride[opId];
+  if(DB.rotacaoSab)delete DB.rotacaoSab[opId];
+  if(DB.travados)delete DB.travados[opId];
+  DB.faltas=DB.faltas?.filter(f=>f.opId!==opId)||[];
+  DB=logH(DB,"Operador removido",op?.nome||"");
+  saveDB();toast(`${op?.nome} removido`,"warn");render();
+}
+function addSabado(){
+  const data=document.getElementById("sab-data")?.value||sabData;
+  const obs=document.getElementById("sab-obs")?.value||sabObs;
+  if(!data){toast("Selecione uma data","warn");return;}
+  if(DB.sabados?.find(s=>s.data===data)){toast("Já registrado","warn");return;}
+  DB.sabados=[...(DB.sabados||[]),{data,obs,id:Date.now()}].sort((a,b)=>a.data.localeCompare(b.data));
+  DB=logH(DB,"Sábado adicionado",fmtD(data));
+  saveDB();sabData="";sabObs="";toast("Sábado registrado ✓");render();
+}
+function delSabado(id){
+  const s=DB.sabados?.find(x=>x.id===id);
+  DB.sabados=DB.sabados?.filter(x=>x.id!==id)||[];
+  DB=logH(DB,"Sábado removido",fmtD(s?.data||""));
+  saveDB();toast("Removido","warn");render();
+}
+function addFalta(){
+  const op_=document.getElementById("f-op")?.value||fOp;
+  const data_=document.getElementById("f-data")?.value||fData;
+  const tipo_=document.getElementById("f-tipo")?.value||fTipo;
+  const obs_=document.getElementById("f-obs")?.value||fObs;
+  if(!data_||!op_){toast("Preencha operador e data","warn");return;}
+  DB.faltas=[...(DB.faltas||[]),{id:Date.now(),opId:op_,data:data_,tipo:tipo_,obs:obs_}].sort((a,b)=>b.data.localeCompare(a.data));
+  const op=getOps().find(o=>o.id===op_);
+  DB=logH(DB,"Ausência registrada",`${op?.nome} · ${fmtD(data_)}`);
+  saveDB();fData="";fObs="";toast("Ausência registrada ✓");render();
+}
+function delFalta(id){
+  const f=DB.faltas?.find(x=>x.id===id);
+  DB.faltas=DB.faltas?.filter(x=>x.id!==id)||[];
+  const op=getOps().find(o=>o.id===f?.opId);
+  DB=logH(DB,"Ausência removida",op?.nome||"");
+  saveDB();toast("Removido","warn");render();
+}
+function resetDB(){if(!confirm("Apagar TODOS os dados?"))return;DB=DB0();saveDB();toast("Banco resetado","warn");render();}
+function resetSeqPostos(){if(!confirm("Resetar postos e sequência para o padrão?"))return;DB.seq=null;DB.postos=null;saveDB();toast("Postos e sequência resetados","warn");render();}
+function irParaEditor(opId,diaIdx,cicloIdx,postoNum){fecharModal();editOp=opId;editDia=diaIdx;editCiclo=cicloIdx;editVal=postoNum;ABA="editor";render();}
+// ── AÇÕES POSTOS E SEQUÊNCIA ──────────────────────────────────────────────────
+function setPostosAba(k){postosAba=k;render();}
+function bindPostosEvents(){
+  const pc=document.getElementById("inp-pcod");
+  if(pc)pc.addEventListener("input",function(){novoCod=this.value.toUpperCase().slice(0,10);this.value=novoCod;});
+  const pd=document.getElementById("inp-pdesc");
+  if(pd)pd.addEventListener("input",function(){novaDesc=this.value.slice(0,60);});
+}
+function addPosto(){
+  const cod_=document.getElementById("inp-pcod")?.value?.trim().toUpperCase()||novoCod.trim();
+  const desc_=document.getElementById("inp-pdesc")?.value?.trim()||novaDesc.trim();
+  if(!cod_){toast("Digite o código","warn");return;}
+  if(!desc_){toast("Digite a descrição","warn");return;}
+  const P=getPostos();
+  if(P.find(p=>p.cod.toUpperCase()===cod_)){toast("Código já existe","warn");return;}
+  const novos=[...P,{cod:cod_,desc:desc_}];
+  DB.postos=novos;
+  DB=logH(DB,"Posto adicionado",`${cod_} — ${desc_}`);
+  saveDB();novoCod="";novaDesc="";toast(`${cod_} cadastrado ✓`);render();
+}
+function delPosto(idx){
+  const P=getPostos();
+  const p=P[idx];
+  if(!confirm(`Remover ${p?.cod} — ${p?.desc}?`))return;
+  // Verificar se está na sequência
+  const numPosto=idx+1;
+  const S=getSeq();
+  const naSeq=S.includes(numPosto);
+  if(naSeq&&!confirm(`Este posto está na sequência de rotação (${S.filter(n=>n===numPosto).length}x). Remover mesmo assim?`))return;
+  const novos=P.filter((_,i)=>i!==idx);
+  // Reindexar sequência: números maiores que idx+1 diminuem 1
+  DB.postos=novos;
+  DB.seq=S.map(n=>{if(n===numPosto)return 0;if(n>numPosto)return n-1;return n;}).filter(n=>n>0);
+  DB=logH(DB,"Posto removido",`${p?.cod}`);
+  saveDB();toast(`${p?.cod} removido`,"warn");render();
+}
+function iniciarEditarSeq(){seqTemp=[...getSeq()];render();}
+function cancelarSeq(){seqTemp=null;render();}
+function addNaSeq(n){
+  if(!seqTemp)return;
+  seqTemp=[...seqTemp,n];
+  // Atualizar visual sem re-render completo
+  render();
+}
+function remDaSeq(idx){
+  if(!seqTemp)return;
+  seqTemp=seqTemp.filter((_,i)=>i!==idx);
+  render();
+}
+function salvarSeq(){
+  if(!seqTemp||seqTemp.length===0){toast("Sequência não pode estar vazia","warn");return;}
+  DB.seq=seqTemp;
+  DB=logH(DB,"Sequência alterada",`${seqTemp.length} posições`);
+  saveDB();seqTemp=null;toast("Sequência salva ✓");render();
+}
+
+function abrirJanela(html){
+  const w=window.open("","_blank","width=1200,height=900");
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
+}
+
+function imprimirGrade(){
+  const ops=getOps();
+  const nomeDia=["Segunda","Terça","Quarta","Quinta","Sexta"][DIA]||"";
+  const P=getPostos();
+  const seq=getSeq();
+  const hoje=new Date().toLocaleString("pt-BR");
+
+  // Monta tabela: linhas=operadores, colunas=ciclos
+  let rows="";
+  ops.forEach((op,oi)=>{
+    const falta=DB.faltas?.find(f=>f.opId===op.id&&f.data===new Date().toISOString().slice(0,10));
+    let cels="";
+    CICLOS.forEach((ciclo,ci)=>{
+      const pNum=getPosto(op.id,DIA,ci);
+      const p=pInfo(pNum);
+      const isOver=DB.rotacaoOverride?.[op.id]?.[DIA]?.[ci]!==undefined;
+      cels+=`<td style="padding:4px 6px;border:1px solid #EAECF0;text-align:center;background:${p?p.cor+"18":"#fafafa"}">
+        <div style="font-family:monospace;font-size:10px;font-weight:700;color:${p?p.cor:"#ccc"}">${p?p.cod:"—"}</div>
+        <div style="font-size:8px;color:#666;margin-top:1px">${ciclo.ini}${ci===14?" 45'":""}</div>
+        ${isOver?`<div style="font-size:7px;color:#EA580C">▲</div>`:""}
+      </td>`;
+    });
+    const trav_p=DB.travados?.[op.id];const travP_=trav_p!==undefined?pInfo(trav_p):null;
+    rows+=`<tr style="${falta?`background:${TIPO_FALTA[falta.tipo]?.bg||"#FEF2F2"}`:trav_p!==undefined?"background:#F5F0FF":oi%2===0?"background:#fff":"background:#FAFBFC"}">
+      <td style="padding:6px 8px;border:1px solid #EAECF0;white-space:nowrap;background:${falta?"inherit":"#F5F8FF"}">
+        <div style="font-weight:700;font-size:12px;color:#001E50">${op.nome}${trav_p!==undefined?" 🔒 "+travP_?.cod:""}</div>
+        <div style="font-family:monospace;font-size:9px;color:#8B919E">${op.id}</div>
+        ${falta?`<div style="font-size:9px;font-weight:700;color:${TIPO_FALTA[falta.tipo]?.cor}">${TIPO_FALTA[falta.tipo]?.label}</div>`:""}
+      </td>
+      ${cels}
+    </tr>`;
+  });
+
+  // Cabeçalho dos ciclos com blocos
+  let thCiclos=`<th style="padding:6px 8px;background:#001E50;color:#fff;font-size:11px;text-align:left;white-space:nowrap">Operador</th>`;
+  CICLOS.forEach((c,ci)=>{
+    const bg=ci>=12?"#003D3D":ci===12?"#7A5200":"#001E50";
+    const lbl=ci===12?"":"";
+    thCiclos+=`<th style="padding:5px 4px;background:${bg};color:${ci>=12?"#afffdf":"#fff"};font-family:monospace;font-size:9px;text-align:center;white-space:nowrap;min-width:44px">
+      ${c.label}<br/><span style="font-size:8px;opacity:.8">${c.ini}</span>${ci===14?`<br/><span style="color:#6fffba;font-size:8px">45'</span>`:""}
+    </th>`;
+  });
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;padding:8mm;}
+    h1{font-size:16px;color:#001E50;margin-bottom:2px;}
+    .sub{font-size:11px;color:#8B919E;margin-bottom:10px;}
+    table{border-collapse:collapse;width:100%;font-size:10px;}
+    .legenda{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+    .leg-item{display:flex;align-items:center;gap:4px;font-size:9px;}
+    .bloco-label{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:4px;margin-bottom:4px;display:inline-block;}
+    @media print{body{padding:5mm;}@page{size:landscape;margin:5mm;}}
+  </style>
+  </head><body>
+  <h1>Fahrwerk · Rotativa Mensal — VW Taubaté</h1>
+  <div class="sub">Dia: <strong>${nomeDia}</strong> &nbsp;|&nbsp; Gerado em: ${hoje} &nbsp;|&nbsp; ${ops.length} operadores</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <span class="bloco-label" style="background:#001E5022;color:#001E50">BLOCO 1 · 15h–21h (C1–C12)</span>
+    <span class="bloco-label" style="background:#FEF3C7;color:#92400E">🍽 JANTA 21h–22h</span>
+    <span class="bloco-label" style="background:#E6F6F0;color:#00875A">BLOCO 2 · 22h–23:45 (C13–C15)</span>
+  </div>
+
+  <table>
+    <thead><tr>${thCiclos}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <div class="legenda">
+    ${P.map((p,i)=>{const c=corP(i+1);return`<div class="leg-item"><span style="width:10px;height:10px;border-radius:2px;background:${c};display:inline-block"></span><span style="font-family:monospace;font-weight:700;color:${c}">${p.cod}</span><span style="color:#555">${p.desc}</span></div>`;}).join("")}
+  </div>
+  <div style="margin-top:8px;font-size:9px;color:#8B919E">▲ = ajuste manual &nbsp;|&nbsp; Sequência: ${seq.map(n=>pInfo(n)?.cod||"?").join(" › ")}</div>
+  </body></html>`;
+  abrirJanela(html);
+}
+
+function exportPDF(){
+  const el=document.getElementById("mes-pdf");if(!el)return;
+  const P=getPostos();
+  const seq=getSeq();
+  const nomeMes=new Date(mesAno,mesMes,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:9px;padding:8mm;}
+    h1{font-size:14px;color:#001E50;margin-bottom:2px;}
+    .sub{font-size:10px;color:#8B919E;margin-bottom:10px;}
+    .g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+    .d{border:1px solid #EAECF0;border-radius:6px;padding:5px;min-height:70px;background:#fff;}
+    .sab{background:#E6F6F0;border-color:#00875A44;}
+    .fim{background:#F5F6F8;opacity:.65;}
+    .dhd{text-align:center;font-weight:700;font-size:10px;padding:3px 0;}
+    .leg{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
+    .li{display:flex;align-items:center;gap:3px;font-size:8px;}
+    @media print{body{padding:5mm;}@page{size:A4 portrait;margin:6mm;}}
+  </style>
+  </head><body>
+  <h1>Fahrwerk · Rotativa Mensal — VW Taubaté</h1>
+  <div class="sub">Mês: <strong style="text-transform:capitalize">${nomeMes}</strong> &nbsp;|&nbsp; Gerado em: ${new Date().toLocaleString("pt-BR")}</div>
+  ${el.innerHTML}
+  <div class="leg">
+    ${P.map((p,i)=>{const c=corP(i+1);return`<div class="li"><span style="width:9px;height:9px;border-radius:2px;background:${c};display:inline-block;flex-shrink:0"></span><span style="font-family:monospace;font-weight:700;color:${c}">${p.cod}</span><span style="color:#555">${p.desc}</span></div>`;}).join("")}
+  </div>
+  </body></html>`;
+  abrirJanela(html);
+}
+
+// Modal fechar ao clicar fora
+document.getElementById("modal-overlay").addEventListener("click",function(e){if(e.target===this)fecharModal();});
+
+// ── ATUALIZAR APP ────────────────────────────────────────────────────────────
+function atualizarApp(){
+  const btn=document.getElementById("btn-atualizar");
+  if(btn){btn.classList.add("girando");btn.disabled=true;}
+  // Limpa caches do service worker se disponível
+  if('caches' in window){
+    caches.keys().then(keys=>{
+      Promise.all(keys.map(k=>caches.delete(k))).then(()=>{
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations().then(regs=>{
+            Promise.all(regs.map(r=>r.unregister())).then(()=>{
+              setTimeout(()=>window.location.reload(true),300);
+            });
+          });
+        } else {
+          setTimeout(()=>window.location.reload(true),300);
+        }
+      });
+    });
+  } else {
+    setTimeout(()=>window.location.reload(true),300);
+  }
+}
+
+// Init
+atualizarCicloVivo();
+setInterval(atualizarCicloVivo,30000);
+render();
+</script>
+</body>
+</html>
